@@ -34,10 +34,17 @@ def linecount(date, commit, src_dir, datafile):
     for line in linecount_records:
         if 'files' in line:
             continue
-        
-       
+               
         records = line.split(',')
-        datafile.write(src_dir + "-" + records[1] + "\t" + date + "\t" + commit + "\t" + records[0] + "\t" + records[1] + "\t" + records[2] + "\t" + records[3] + "\t" + records[4] + "\t" + records[5] + "\t" + records[6])
+        number_of_files = records[0]
+        language = records[1]
+        number_of_blank_lines = records[2]
+        lines_of_comments = records[3]
+        lines_of_code = records[4]
+        scale = records[5]
+        third_gen = records[6]
+        
+        datafile.write(src_dir + "-" + language + "\t" + date + "\t" + lines_of_code + "\t" + number_of_blank_lines + "\t" + lines_of_comments + "\t" + lines_of_code + "\t" + scale + "\t" + third_gen + "\t" + commit)
             
 def main():
     tmp_dir = tempfile.mkdtemp()
@@ -47,8 +54,8 @@ def main():
     f = open(file_with_all_commits)
 
     data = open(tmp_dir + "/linecounts.tsv", 'w')
-    print data
-    data.write("Type Of File\tDate\tCommit\tNumber Of Files\tLanguage\tNumber Blank\tNumber Comment\tNumber Code\tScale\t3rd gen. equiv\n")
+    print "Writing to " + data.name
+    data.write("Type Of File\tDate\tLines Of Code\tNumber Blank\tNumber Comment\tScale\t3rd gen. equiv\tCommit\n")
 
     sample_rate = 10
     count = 0
@@ -69,7 +76,7 @@ def main():
             else:
                 print "Skipping " + git_commit
                 
-    print data
+    print data.name
     data.close()
 
 if __name__ == "__main__":
