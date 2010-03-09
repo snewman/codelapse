@@ -28,14 +28,18 @@ def execute_and_return(command):
 def linecount(date, commit, src_dir, datafile):
     linecount_records = execute_and_return('perl ~/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet')
 
+    sample_rate = 10
+    count = 0
+
     for line in linecount_records:
         if 'files' in line:
             continue
+        
+       
         records = line.split(',')
-        datafile.write(src_dir + "\t" + date + "\t" + commit + "\t" + records[0] + "\t" + records[1] + "\t" + records[2] + "\t" + records[3] + "\t" + records[4] + "\t" + records[5] + "\t" + records[6])
-
+        datafile.write(src_dir + "-" + records[1] + "\t" + date + "\t" + commit + "\t" + records[0] + "\t" + records[1] + "\t" + records[2] + "\t" + records[3] + "\t" + records[4] + "\t" + records[5] + "\t" + records[6])
+            
 def main():
-    # the main code goes here perl cloc-1.08.pl ../Development/Autotrader/sauron-git/src
     tmp_dir = tempfile.mkdtemp()
     file_with_all_commits = tmp_dir + "/commits.out"
     execute('git log --format=format:"%H || %ai || %s%n" --date=iso > ' + file_with_all_commits)
@@ -44,6 +48,10 @@ def main():
 
     data = open(tmp_dir + "/linecounts.tsv", 'w')
     print data
+    data.write("Type Of File\tDate\tCommit\tNumber Of Files\tLanguage\tNumber Blank\tNumber Comment\tNumber Code\tScale\t3rd gen. equiv\n")
+
+    sample_rate = 10
+    count = 0
 
     for line in f:
         records = line.split('||')
@@ -51,22 +59,15 @@ def main():
             git_commit = records[0]
             date = records[1]
 
-            print "Running line count for " + git_commit
-            execute('git reset --hard %s' % git_commit)
-            linecount(date, git_commit, 'src', data)
-            linecount(date, git_commit, 'test', data)
-
-            #p = Popen('perl ~/tools/cloc-1.08.pl src --csv --quiet', shell=True)
-            #retval = os.waitpid(p.pid, 0)[1]
-
-            #if retval <> 0:
-            #    sys.exit(retval)
-
-            #os.system('perl ~/tools/cloc-1.08.pl src --csv --quiet')
-            #data.write(records[0] + "\t" + records[1])
-            #retval = os.system('git reset --hard %s' % records[0])
-            #if retval <> 0:
-            #    sys.exit(retval)
+            count = count + 1
+            if count == sample_rate:
+                print "Running line count for " + git_commit
+                execute('git reset --hard %s' % git_commit)
+                linecount(date, git_commit, 'src', data)
+                linecount(date, git_commit, 'test', data)
+                count = 0
+            else:
+                print "Skipping " + git_commit
                 
     print data
     data.close()
