@@ -4,15 +4,7 @@ import tempfile
 import sys
 from optparse import OptionParser
 
-class ByDateLineCount:
-    def __init__(self, date, commit):
-        self.date = date
-        self.commit = commit
-        self.records = {}
 
-    def add_record(self, language, count):
-        self.records[language] = int(count)
-    
 def execute(command):
     try:
         retcode = call(command, shell=True)
@@ -33,6 +25,27 @@ def execute_and_return(command):
             return p.stdout
     except OSError, e:
         print >>sys.stderr, "Execution failed:", e
+
+class GitRepo:
+
+    def current_head(self):
+        return execute_and_return('git log --format=format:"%H" -1').read()
+
+    def list_commits_to_file(self, destination_file_name):
+         execute('git log --format=format:"%H || %ai || %s%n" --date=iso > ' + destination_file_name)
+    
+    def hard_reset(self, commit_hash):
+        execute('git reset --hard %s' % commit_hash)
+
+class ByDateLineCount:
+    def __init__(self, date, commit):
+        self.date = date
+        self.commit = commit
+        self.records = {}
+
+    def add_record(self, language, count):
+        self.records[language] = int(count)
+    
 
 def create_record(by_date_count, cloc_line):
     records = cloc_line.split(',')
@@ -96,7 +109,7 @@ def linecount_for_date(date, commit, src_dir, datafile):
             
 def generate_commit_list(location_for_files):
     file_with_all_commits = location_for_files + "/commits.out"
-    execute('git log --format=format:"%H || %ai || %s%n" --date=iso > ' + file_with_all_commits)
+    GitRepo().list_commits_to_file(file_with_all_commits)
     git_output_file = open(file_with_all_commits)
     list_of_commits = []
 
@@ -111,8 +124,9 @@ def generate_commit_list(location_for_files):
 
 def line_counts(location_for_results, sample_rate):
     data = open(location_for_results + "/line_count_by_time.tsv", 'w')
-
+    
     commit_list = generate_commit_list(location_for_results)
+    head = GitRepo().current_head()
     
     count = 0
     by_date_counts = []
@@ -123,7 +137,7 @@ def line_counts(location_for_results, sample_rate):
         count = count + 1
         if count == sample_rate:
             print "Running line count for " + git_commit
-            execute('git reset --hard %s' % git_commit)
+            GitRepo().hard_reset(git_commit)
             by_date_counts.append(linecount_for_date(date, git_commit, 'src', data))
             
             count = 0
@@ -131,6 +145,9 @@ def line_counts(location_for_results, sample_rate):
             print "Skipping " + git_commit
                 
     data.write(as_csv(by_date_counts))
+
+    print "Resetting to " + head
+    GitRepo().hard_reset(head)
 
     print data.name
     data.close()
