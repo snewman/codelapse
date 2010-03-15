@@ -66,8 +66,13 @@ def new_linecount(cloc_output, date, commit):
 
     return by_date_count
 
-def as_csv(languages_to_report, by_date_records):
+def as_csv(by_date_records):
     row_header = 'Date'
+    languages_to_report = set()
+
+    for record in by_date_records:
+        for language in record.records.keys():
+            languages_to_report.add(language)
 
     for language in languages_to_report:
         row_header = row_header + ',' + language

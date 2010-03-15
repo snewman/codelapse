@@ -25,15 +25,12 @@ files,language,blank,comment,code,scale,3rd gen. equiv,"http://cloc.sourceforge.
     assert_equal(252, by_date_count.records['Bourne Shell'])
 
 def test_can_format_empty_date_counts_as_csv():
-    languages_to_report = ['Java', 'C']
-
-    csv_output = as_csv(languages_to_report, [])
+    csv_output = as_csv([])
     lines = csv_output.split('\n')
 
-    assert_equal(lines[0], 'Date,Java,C')
+    assert_equal(lines[0], 'Date')
 
 def test_can_format_date_counts_as_csv():
-    languages_to_report = ['Java', 'C']
     first_counts = ByDateLineCount('1st March', 'commit')
     first_counts.add_record('Java', 123)
 
@@ -41,11 +38,11 @@ def test_can_format_date_counts_as_csv():
     second_counts.add_record('Java', 124)
     second_counts.add_record('C', 4452)
 
-    csv_output = as_csv(languages_to_report, [first_counts, second_counts])
+    csv_output = as_csv([first_counts, second_counts])
     lines = csv_output.split('\n')
-    assert_equal(lines[0], 'Date,Java,C')
-    assert_equal(lines[1], '1st March,123,0')
-    assert_equal(lines[2], '2nd March,124,4452')
+    assert_equal(lines[0], 'Date,C,Java')
+    assert_equal(lines[1], '1st March,0,123')
+    assert_equal(lines[2], '2nd March,4452,124')
 
 
 if __name__ == "__main__":
