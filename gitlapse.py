@@ -111,7 +111,6 @@ def generate_commit_list(location_for_files):
 
 def line_counts(location_for_results, sample_rate):
     data = open(location_for_results + "/line_count_by_time.tsv", 'w')
-    data.write("Type Of File\tDate\tLines Of Code\tNumber Blank\tNumber Comment\tScale\t3rd gen. equiv\tCommit\n")
 
     commit_list = generate_commit_list(location_for_results)
     
