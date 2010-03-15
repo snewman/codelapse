@@ -51,7 +51,7 @@ def create_record(by_date_count, cloc_line):
     by_date_count.add_record(language, lines_of_code)
     return by_date_count
 
-def new_linecount(cloc_output, date, commit):
+def parse_cloc_output(cloc_output, date, commit):
     by_date_count = ByDateLineCount(date, commit)
     lines = cloc_output.split('\n')
 
@@ -89,23 +89,10 @@ def as_csv(by_date_records):
         
     return row_header
 
-def linecount(date, commit, src_dir, datafile):
-    linecount_records = execute_and_return('perl ~/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet')
+def linecount_for_date(date, commit, src_dir, datafile):
+    cloc_output = execute_and_return('perl ~/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet')
 
-    for line in linecount_records:
-        if 'files' in line:
-            continue
-               
-        records = line.split(',')
-        number_of_files = records[0]
-        language = records[1]
-        number_of_blank_lines = records[2]
-        lines_of_comments = records[3]
-        lines_of_code = records[4]
-        scale = records[5]
-        third_gen = records[6]
-
-        datafile.write('%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' % (src_dir + language, date, lines_of_code, number_of_blank_lines, lines_of_comments, scale, third_gen, commit))
+    return parse_cloc_output(cloc_output.read(), date, commit)
             
 def generate_commit_list(location_for_files):
     file_with_all_commits = location_for_files + "/commits.out"
@@ -129,7 +116,7 @@ def line_counts(location_for_results, sample_rate):
     commit_list = generate_commit_list(location_for_results)
     
     count = 0
-
+    by_date_counts = []
     for commit in commit_list:
         date = commit[1]
         git_commit = commit[0]
@@ -138,12 +125,14 @@ def line_counts(location_for_results, sample_rate):
         if count == sample_rate:
             print "Running line count for " + git_commit
             execute('git reset --hard %s' % git_commit)
-            linecount(date, git_commit, 'src', data)
-            linecount(date, git_commit, 'test', data)
+            by_date_counts.append(linecount_for_date(date, git_commit, 'src', data))
+            
             count = 0
         else:
             print "Skipping " + git_commit
                 
+    data.write(as_csv(by_date_counts))
+
     print data.name
     data.close()
     

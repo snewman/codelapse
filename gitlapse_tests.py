@@ -17,7 +17,7 @@ files,language,blank,comment,code,scale,3rd gen. equiv,"http://cloc.sourceforge.
 10,Bourne Shell,56,155,252,3.81,960.12
 2,Python,28,0,112,4.2,470.4"""
 
-    by_date_count = new_linecount(cloc_output, "somedate", "somecommit")
+    by_date_count = parse_cloc_output(cloc_output, "somedate", "somecommit")
     assert_equal("somedate", by_date_count.date)
     assert_equal("somecommit", by_date_count.commit)
 
