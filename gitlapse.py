@@ -134,7 +134,7 @@ def generate_commit_list(location_for_files):
     
     return list_of_commits
 
-def line_counts(location_for_results, sample_rate):
+def line_counts(location_for_results, sample_rate, src_dirs):
     data = open(location_for_results + "/line_count_by_time.tsv", 'w')
     
     commit_list = generate_commit_list(location_for_results)
@@ -150,7 +150,7 @@ def line_counts(location_for_results, sample_rate):
         if count == sample_rate:
             print "Running line count for " + git_commit
             GitRepo().hard_reset(git_commit)
-            by_date_counts.append(linecount_for_date(date, git_commit, ['src','test'], data))
+            by_date_counts.append(linecount_for_date(date, git_commit, src_dirs, data))
             count = 0
         else:
             print "Skipping " + git_commit
@@ -173,10 +173,10 @@ def main():
 
     results_dir = options.result_dir
     sample_rate = options.sample_rate
-    src_dirs = options.src_dirs
-    print "Using a sample rate of " + str(sample_rate) + " reading from files " + str(src_dirs)
+    src_dirs_str = options.src_dirs
+    print "Using a sample rate of " + str(sample_rate) + " reading from files " + str(src_dirs_str)
 
-    line_counts(results_dir, sample_rate)
+    line_counts(results_dir, sample_rate, src_dirs_str.split(','))
     
 
 if __name__ == "__main__":
