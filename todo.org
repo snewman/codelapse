@@ -1,0 +1,24 @@
+* Tasks
+** TODO Add Tests
+** TODO Cleanup format for gnuplot
+** TODO Seperate file formatting from data extraction 
+** DONE create org file
+
+* Some Stuff
+** And again
+
+* Some Thing
+** fff
+** dsds
+*** a
+
+
+* Thursday
+** Working with old software
+Maintenance progrmmer?
+
+As an ndusty matures, it becomes more capital intensive
+What is cAPITAL FOR SOFTWARE?
+DEATH OF THE SMALL SHOP.
+Computers are not capital? What is?
+Capital is so
