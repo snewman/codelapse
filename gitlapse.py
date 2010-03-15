@@ -112,10 +112,12 @@ def as_csv(by_date_records):
         
     return row_header
 
-def linecount_for_date(date, commit, src_dir, datafile):
-    cloc_output = execute_and_return('perl ~/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet')
+def linecount_for_date(date, commit, src_dirs, datafile):
+    cloc_for_dirs = {}
+    for src_dir in src_dirs:
+        cloc_for_dirs[src_dir] = execute_and_return('perl ~/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet').read() 
 
-    return parse_cloc_output({src_dir : cloc_output.read()}, date, commit)
+    return parse_cloc_output(cloc_for_dirs, date, commit)
             
 def generate_commit_list(location_for_files):
     file_with_all_commits = location_for_files + "/commits.out"
@@ -148,8 +150,7 @@ def line_counts(location_for_results, sample_rate):
         if count == sample_rate:
             print "Running line count for " + git_commit
             GitRepo().hard_reset(git_commit)
-            by_date_counts.append(linecount_for_date(date, git_commit, 'src', data))
-            
+            by_date_counts.append(linecount_for_date(date, git_commit, ['src','test'], data))
             count = 0
         else:
             print "Skipping " + git_commit
