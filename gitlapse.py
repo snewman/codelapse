@@ -115,7 +115,7 @@ def as_csv(by_date_records):
 def linecount_for_date(date, commit, src_dir, datafile):
     cloc_output = execute_and_return('perl ~/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet')
 
-    return parse_cloc_output(cloc_output.read(), date, commit)
+    return parse_cloc_output({src_dir : cloc_output.read()}, date, commit)
             
 def generate_commit_list(location_for_files):
     file_with_all_commits = location_for_files + "/commits.out"
