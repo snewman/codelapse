@@ -41,13 +41,15 @@ class ByDateLineCount:
     def __init__(self, date, commit):
         self.date = date
         self.commit = commit
-        self.records = {}
+        self.src_dir = {}
 
-    def add_record(self, language, count):
-        self.records[language] = int(count)
+    def add_record(self, src_dir, language, count):
+        counts_for_dir = self.src_dir.get(src_dir, {})
+        counts_for_dir[language] = int(count)
+        self.src_dir[src_dir] = counts_for_dir
     
 
-def create_record(by_date_count, cloc_line):
+def create_record(src_dir, by_date_count, cloc_line):
     records = cloc_line.split(',')
 
     if len(records) < 7:
@@ -61,42 +63,50 @@ def create_record(by_date_count, cloc_line):
     scale = records[5]
     third_gen = records[6]
 
-    by_date_count.add_record(language, lines_of_code)
+    by_date_count.add_record(src_dir, language, lines_of_code)
     return by_date_count
 
 def parse_cloc_output(cloc_output, date, commit):
     by_date_count = ByDateLineCount(date, commit)
-    lines = cloc_output.split('\n')
 
-    for line in lines:
-        if 'files' in line:
-            continue
+    for src_dir in cloc_output.keys():
+        lines = cloc_output[src_dir].split('\n')
+        
+        for line in lines:
+            if 'files' in line:
+                continue
 
-        if line.isspace() or len(line) == 0:
-            continue
+            if line.isspace() or len(line) == 0:
+                continue
 
-        create_record(by_date_count, line)
+            create_record(src_dir, by_date_count, line)
 
     return by_date_count
 
 def as_csv(by_date_records):
-    row_header = 'Date'
-    languages_to_report = set()
+    languages_to_report = {}
 
     for record in by_date_records:
-        for language in record.records.keys():
-            languages_to_report.add(language)
+        for src_dir in record.src_dir.keys():
+            languages_for_dir = languages_to_report.get(src_dir, set())
+            
+            for language in record.src_dir[src_dir].keys():
+                languages_for_dir.add(language)
 
-    for language in languages_to_report:
-        row_header = row_header + '\t' + language
+            languages_to_report[src_dir] = languages_for_dir
+
+    row_header = 'Date'
+    for src_dir in languages_to_report.keys():
+        for language in languages_to_report[src_dir]:
+            row_header = row_header + '\t' + src_dir + '-' + language
 
     row_header = row_header + '\n'
 
     for record in by_date_records:
         row_header = row_header + record.date
-        
-        for language in languages_to_report:
-            row_header = row_header + '\t' + str(record.records.get(language, 0))
+        for src_dir in languages_to_report.keys():
+            for language in languages_to_report[src_dir]:
+                row_header = row_header + '\t' + str(record.src_dir.get(src_dir, {}).get(language, 0))
 
         row_header = row_header + '\n'
         
