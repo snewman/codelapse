@@ -2,12 +2,6 @@ import nose
 from nose.tools import *
 from gitlapse import *
 
-def test1():
-    assert False
-
-def test2():
-    assert True
-
 def main():
     nosemain()
 
