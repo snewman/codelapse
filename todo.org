@@ -1,6 +1,6 @@
 * Tasks
 ** DONE Add Tests
-** TODO Change git format to ensure it works with gnuplot parsing
+** DONE Change git format to ensure it works with gnuplot parsing
 ** TODO Support test code plotting too
 ** DONE Reset git head after analysis
 ** TODO Add markdown readme
