@@ -88,7 +88,7 @@ def as_csv(by_date_records):
             languages_to_report.add(language)
 
     for language in languages_to_report:
-        row_header = row_header + ',' + language
+        row_header = row_header + '\t' + language
 
     row_header = row_header + '\n'
 
@@ -96,7 +96,7 @@ def as_csv(by_date_records):
         row_header = row_header + record.date
         
         for language in languages_to_report:
-            row_header = row_header + ',' + str(record.records.get(language, 0))
+            row_header = row_header + '\t' + str(record.records.get(language, 0))
 
         row_header = row_header + '\n'
         

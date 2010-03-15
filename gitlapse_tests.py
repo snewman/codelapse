@@ -24,13 +24,13 @@ files,language,blank,comment,code,scale,3rd gen. equiv,"http://cloc.sourceforge.
     assert_equal(112, by_date_count.records['Python'])
     assert_equal(252, by_date_count.records['Bourne Shell'])
 
-def test_can_format_empty_date_counts_as_csv():
+def test_can_format_empty_date_counts_as_tsv():
     csv_output = as_csv([])
     lines = csv_output.split('\n')
 
     assert_equal(lines[0], 'Date')
 
-def test_can_format_date_counts_as_csv():
+def test_can_format_date_counts_as_tsv():
     first_counts = ByDateLineCount('1st March', 'commit')
     first_counts.add_record('Java', 123)
 
@@ -40,9 +40,9 @@ def test_can_format_date_counts_as_csv():
 
     csv_output = as_csv([first_counts, second_counts])
     lines = csv_output.split('\n')
-    assert_equal(lines[0], 'Date,C,Java')
-    assert_equal(lines[1], '1st March,0,123')
-    assert_equal(lines[2], '2nd March,4452,124')
+    assert_equal(lines[0], 'Date\tC\tJava')
+    assert_equal(lines[1], '1st March\t0\t123')
+    assert_equal(lines[2], '2nd March\t4452\t124')
 
 
 if __name__ == "__main__":
