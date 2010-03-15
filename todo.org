@@ -1,7 +1,10 @@
 * Tasks
-** TODO Add Tests
-** TODO Cleanup format for gnuplot
-** TODO Seperate file formatting from data extraction 
+** DONE Add Tests
+** TODO Change git format to ensure it works with gnuplot parsing
+** TODO Support test code plotting too
+** TODO Reset git head after analysis
+** TODO Add markdown readme
+** DONE Seperate file formatting from data extraction 
 ** DONE create org file
 
 * Some Stuff
