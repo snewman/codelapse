@@ -4,7 +4,7 @@ import tempfile
 import sys
 from optparse import OptionParser
 
-class LineCountRecord:
+class ByDateLineCount:
     def __init__(self, date, commit):
         self.date = date
         self.commit = commit
@@ -34,10 +34,12 @@ def execute_and_return(command):
     except OSError, e:
         print >>sys.stderr, "Execution failed:", e
 
-def create_record(date, commit, cloc_line):
-    record = LineCountRecord(date, commit)
-
+def create_record(by_date_count, cloc_line):
     records = cloc_line.split(',')
+
+    if len(records) < 7:
+        raise Exception('Cannot parse line \"' + cloc_line + '\"')
+
     number_of_files = records[0]
     language = records[1]
     number_of_blank_lines = records[2]
@@ -46,8 +48,41 @@ def create_record(date, commit, cloc_line):
     scale = records[5]
     third_gen = records[6]
 
-    record.add_record(language, lines_of_code)
-    return record
+    by_date_count.add_record(language, lines_of_code)
+    return by_date_count
+
+def new_linecount(cloc_output, date, commit):
+    by_date_count = ByDateLineCount(date, commit)
+    lines = cloc_output.split('\n')
+
+    for line in lines:
+        if 'files' in line:
+            continue
+
+        if line.isspace() or len(line) == 0:
+            continue
+
+        create_record(by_date_count, line)
+
+    return by_date_count
+
+def as_csv(languages_to_report, by_date_records):
+    row_header = 'Date'
+
+    for language in languages_to_report:
+        row_header = row_header + ',' + language
+
+    row_header = row_header + '\n'
+
+    for record in by_date_records:
+        row_header = row_header + record.date
+        
+        for language in languages_to_report:
+            row_header = row_header + ',' + str(record.records.get(language, 0))
+
+        row_header = row_header + '\n'
+        
+    return row_header
 
 def linecount(date, commit, src_dir, datafile):
     linecount_records = execute_and_return('perl ~/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet')
