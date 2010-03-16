@@ -7,6 +7,7 @@ from optparse import OptionParser
 
 def execute(command):
     try:
+        print "Running " + command
         p = Popen(command, shell=True, stdout=PIPE)
         retcode = os.waitpid(p.pid, 0)[1]
         if retcode < 0:
@@ -23,7 +24,21 @@ class GitRepo:
         return execute('git log --format=format:"%H" -1').read()
 
     def list_commits_to_file(self, destination_file_name):
-         execute('git log --format=format:"%H || %ai || %s%n" --date=iso > ' + destination_file_name)
+        execute('git --no-pager log --format=format:"%H || %ai || %s%n" --date=iso > ' + destination_file_name)
+        return open(destination_file_name)
+
+    def commits(self, destination_file_name):
+        git_output_file = self.list_commits_to_file(destination_file_name)
+        list_of_commits = []
+
+        for line in git_output_file:
+            records = line.split('||')
+            if len(records) > 1:
+                git_commit = records[0]
+                date = records[1]
+                list_of_commits.append((git_commit, date))
+    
+        return list_of_commits
     
     def hard_reset(self, commit_hash):
         execute('git reset --hard %s' % commit_hash)
@@ -112,19 +127,8 @@ def linecount_for_date(date, commit, src_dirs, datafile):
             
 def generate_commit_list(location_for_files):
     file_with_all_commits = location_for_files + "/commits.out"
-    GitRepo().list_commits_to_file(file_with_all_commits)
-    git_output_file = open(file_with_all_commits)
-    list_of_commits = []
-
-    for line in git_output_file:
-        records = line.split('||')
-        if len(records) > 1:
-            git_commit = records[0]
-            date = records[1]
-            list_of_commits.append((git_commit, date))
+    return GitRepo().commits(file_with_all_commits)
     
-    return list_of_commits
-
 def line_counts(location_for_results, sample_rate, src_dirs):
     data = open(location_for_results + "/line_count_by_time.tsv", 'w')
     
@@ -173,7 +177,6 @@ def execution_path(filename):
 RUNNING_FROM =  os.path.abspath(execution_path('run.sh'))
 
 def main():
-    print "Got path " + RUNNING_FROM
     parser = OptionParser()
     parser.add_option("-r", "--results_dir", action="store", dest="result_dir", type="string", default=".", help="Location where results will be stored")
     parser.add_option("-s", "--source_dir", action="store", dest="src_dirs", type="string", default="src", help="A comma seperated list of directories to parse")
