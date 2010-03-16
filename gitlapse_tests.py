@@ -76,6 +76,16 @@ def test_can_format_multiple_dirs_date_counts_as_tsv():
     assert_equal(lines[1], '1st March\t0\t0\t123')
     assert_equal(lines[2], '2nd March\t4452\t5\t124')
 
+def test_can_generate_gnuplot_for_table_data():
+    table_data = "Date	test-Javascript	test-Java	src-Java	web-Javascript	web-PHP"
+    gnuplot_data = to_gnuplot(table_data)
+    assert_equals("""plot "line_count_by_time.tsv" using 1:4 title "test-Javascript", \
+"line_count_by_time.tsv" using 1:5 title "test-Java", \
+"line_count_by_time.tsv" using 1:6 title "src-Java", \
+"line_count_by_time.tsv" using 1:7 title "web-Javascript", \
+"line_count_by_time.tsv" using 1:8 title "web-PHP", \
+""", gnuplot_data)
+
 
 if __name__ == "__main__":
     main()

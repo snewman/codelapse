@@ -163,6 +163,19 @@ def line_counts(location_for_results, sample_rate, src_dirs):
     print data.name
     data.close()
     
+def to_gnuplot(data_table):
+    header_row = data_table.split('\n')[0]
+    columns = header_row.split('\t')[1:]
+
+    gnuplot = 'plot '
+    count = 4 # The first 3 columns contain the date
+    
+    for column in columns:
+        gnuplot = gnuplot + ('"line_count_by_time.tsv" using 1:%d title "%s", ' % (count, column))
+        count = count + 1
+
+    return gnuplot
+
 def main():
     parser = OptionParser()
     parser.add_option("-r", "--results_dir", action="store", dest="result_dir", type="string", default=".", help="Location where results will be stored")
