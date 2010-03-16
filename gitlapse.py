@@ -5,17 +5,7 @@ import tempfile
 import sys
 from optparse import OptionParser
 
-
 def execute(command):
-    try:
-        retcode = call(command, shell=True)
-        if retcode < 0:
-            print >>sys.stderr, "Child was terminated by signal", -retcode
-            sys.exit(retcode)
-    except OSError, e:
-        print >>sys.stderr, "Execution failed:", e
-
-def execute_and_return(command):
     try:
         p = Popen(command, shell=True, stdout=PIPE)
         retcode = os.waitpid(p.pid, 0)[1]
@@ -30,7 +20,7 @@ def execute_and_return(command):
 class GitRepo:
 
     def current_head(self):
-        return execute_and_return('git log --format=format:"%H" -1').read()
+        return execute('git log --format=format:"%H" -1').read()
 
     def list_commits_to_file(self, destination_file_name):
          execute('git log --format=format:"%H || %ai || %s%n" --date=iso > ' + destination_file_name)
@@ -116,7 +106,7 @@ def as_csv(by_date_records):
 def linecount_for_date(date, commit, src_dirs, datafile):
     cloc_for_dirs = {}
     for src_dir in src_dirs:
-        cloc_for_dirs[src_dir] = execute_and_return('perl ' + RUNNING_FROM + '/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet').read() 
+        cloc_for_dirs[src_dir] = execute('perl ' + RUNNING_FROM + '/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet').read() 
 
     return parse_cloc_output(cloc_for_dirs, date, commit)
             
