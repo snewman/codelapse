@@ -4,8 +4,9 @@
 ** DONE Support test code plotting too
 ** DONE Reset git head after analysis
 ** DONE Support directory name passing via the command-line
-** TODO Add markdown readme
+** DONE Add markdown readme
 ** DONE Add cloc to checkin
+** TODO Add a licence file (esp. for cloc)
 ** TODO Add end to end smoke tests
 ** TODO Add support to ignore a directory which is not there
 ** TODO Start adding support for checktyle

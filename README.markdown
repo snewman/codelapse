@@ -1,3 +1,15 @@
+About
+-----
+
+Codelapse runs against a local Git repo to extract metrics over the
+lifecycle of the codebase. Currently, inly lines of code are
+supported, but toxicity over time (powered by checktyle) is planned
+for the near future.
+
+Its core job is to generate the raw data for further analysis,
+although some basic support to produce gnuplot output is planned to
+enable simple-case graphing.
+
 Requirements
 ------------
 
