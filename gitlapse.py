@@ -1,4 +1,5 @@
 import os
+import inspect
 from subprocess import *
 import tempfile
 import sys
@@ -115,7 +116,7 @@ def as_csv(by_date_records):
 def linecount_for_date(date, commit, src_dirs, datafile):
     cloc_for_dirs = {}
     for src_dir in src_dirs:
-        cloc_for_dirs[src_dir] = execute_and_return('perl ~/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet').read() 
+        cloc_for_dirs[src_dir] = execute_and_return('perl ' + RUNNING_FROM + '/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet').read() 
 
     return parse_cloc_output(cloc_for_dirs, date, commit)
             
@@ -176,7 +177,13 @@ def to_gnuplot(data_table):
 
     return gnuplot
 
+def execution_path(filename):
+  return os.path.join(os.path.dirname(inspect.getfile(sys._getframe(1))), filename)
+
+RUNNING_FROM =  os.path.abspath(execution_path('run.sh'))
+
 def main():
+    print "Got path " + RUNNING_FROM
     parser = OptionParser()
     parser.add_option("-r", "--results_dir", action="store", dest="result_dir", type="string", default=".", help="Location where results will be stored")
     parser.add_option("-s", "--source_dir", action="store", dest="src_dirs", type="string", default="src", help="A comma seperated list of directories to parse")

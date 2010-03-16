@@ -1,0 +1,22 @@
+#!/usr/bin/gnuplot
+reset
+set xdata time
+set timefmt "%Y-%m-%d %H:%M:%S"
+set format x "%d/%m"
+set xlabel "time"
+
+set ylabel "lines of code"
+set yrange [0:80000]
+
+set terminal png
+
+set grid
+set style data linespoints
+set style line 1 lt 2 lc rgb "red" lw 3
+show style line 
+
+plot "line_count_by_time.tsv" using 1:4 title "Test JS", \
+"line_count_by_time.tsv" using 1:5 title "Test Java",\
+"line_count_by_time.tsv" using 1:6 title "Src Java",\
+"line_count_by_time.tsv" using 1:8 title "Php",\
+"line_count_by_time.tsv" using 1:7 title "Src JS"
