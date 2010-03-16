@@ -6,10 +6,12 @@
 ** DONE Support directory name passing via the command-line
 ** TODO Add markdown readme
 ** TODO Add cloc to checkin
+** TODO Add end to end smoke tests
 ** TODO Add support to ignore a directory which is not there
 ** TODO Start adding support for checktyle
 ** TODO Add option to do one sample per day
 ** TODO Optionally produce a gnuplot file for graphing
+** TODO Generate build file
 ** DONE Seperate file formatting from data extraction 
 ** DONE create org file
 
