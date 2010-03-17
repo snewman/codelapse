@@ -23,10 +23,10 @@ class Executor:
 
 class GitRepo:
 
-    def __init__(self, git_dir, working_dir):
+    def __init__(self, git_dir, working_dir, executor):
         self.git_dir = git_dir
         self.working_dir = working_dir
-        self.executor = Executor()
+        self.executor = executor
 
     def current_head(self):
         return self.executor.execute('git --git-dir=' + self.git_dir + ' log --format=format:"%H" -1').read()
@@ -142,7 +142,7 @@ def generate_commit_list(location_for_files, git_repo):
 def line_counts(location_for_results, sample_rate, src_dirs, git_dir, working_dir):
     data = open(location_for_results + "/line_count_by_time.tsv", 'w')
 
-    git_repo = GitRepo(git_dir, working_dir)
+    git_repo = GitRepo(git_dir, working_dir, Executor())
     commit_list = generate_commit_list(location_for_results, git_repo)
     head = git_repo.current_head()
     

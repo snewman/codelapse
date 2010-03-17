@@ -8,6 +8,32 @@ import os
 def main():
     nosemain()
 
+class FakeOutput:
+
+    def __init__(self, expected_result):
+        self.expected_result = expected_result
+
+    def read(self):
+        return self.expected_result
+ 
+class MockExecutor:
+
+    def __init__(self, expected_result):
+        self.last_command = None
+        self.output = FakeOutput(expected_result)
+
+    def execute(self, command):
+        self.last_command = command
+        return self.output
+
+def test_can_get_head_of_current_branch():
+    executor = MockExecutor("1234")
+    repo = gitlapse.GitRepo('gitdir', 'workingdir', executor)
+    repo.current_head()
+    expected_command = 'git --git-dir=gitdir log --format=format:"%H" -1'
+    assert_equals(expected_command, executor.last_command)
+        
+
 def test_can_create_record():
     cloc_line = "10,Bourne Shell,56,155,252,3.81,960.12"
     by_date_count = gitlapse.ByDateLineCount('somedate', 'somecommit')
