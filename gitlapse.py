@@ -20,11 +20,15 @@ def execute(command):
 
 class GitRepo:
 
+    def __init__(self, git_dir, working_dir):
+        self.git_dir = git_dir
+        self.working_dir = working_dir
+
     def current_head(self):
-        return execute('git log --format=format:"%H" -1').read()
+        return execute('git --git-dir=' + self.git_dir + ' log --format=format:"%H" -1').read()
 
     def list_commits_to_file(self, destination_file_name):
-        execute('git --no-pager log --format=format:"%H || %ai || %s%n" --date=iso > ' + destination_file_name)
+        execute('git --git-dir=' + self.git_dir + ' --no-pager log --format=format:"%H || %ai || %s%n" --date=iso > ' + destination_file_name)
         return open(destination_file_name)
 
     def commits(self, destination_file_name):
@@ -41,7 +45,7 @@ class GitRepo:
         return list_of_commits
     
     def hard_reset(self, commit_hash):
-        execute('git reset --hard %s' % commit_hash)
+        execute('git --git-dir=' + self.git_dir + ' --work-tree=' + self.working_dir + ' reset --hard %s' % commit_hash)
 
 class ByDateLineCount:
     def __init__(self, date, commit):
@@ -118,22 +122,23 @@ def as_csv(by_date_records):
         
     return row_header
 
-def linecount_for_date(date, commit, src_dirs, datafile):
+def linecount_for_date(date, commit, src_dirs, datafile, working_dir):
     cloc_for_dirs = {}
     for src_dir in src_dirs:
-        cloc_for_dirs[src_dir] = execute('perl ' + RUNNING_FROM + '/tools/cloc-1.08.pl ' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet').read() 
+        cloc_for_dirs[src_dir] = execute('perl ' + RUNNING_FROM + '/tools/cloc-1.08.pl ' + working_dir + '/' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet').read() 
 
     return parse_cloc_output(cloc_for_dirs, date, commit)
             
-def generate_commit_list(location_for_files):
+def generate_commit_list(location_for_files, git_repo):
     file_with_all_commits = location_for_files + "/commits.out"
-    return GitRepo().commits(file_with_all_commits)
+    return git_repo.commits(file_with_all_commits)
     
-def line_counts(location_for_results, sample_rate, src_dirs):
+def line_counts(location_for_results, sample_rate, src_dirs, git_dir, working_dir):
     data = open(location_for_results + "/line_count_by_time.tsv", 'w')
-    
-    commit_list = generate_commit_list(location_for_results)
-    head = GitRepo().current_head()
+
+    git_repo = GitRepo(git_dir, working_dir)
+    commit_list = generate_commit_list(location_for_results, git_repo)
+    head = git_repo.current_head()
     
     count = 0
     by_date_counts = []
@@ -144,8 +149,8 @@ def line_counts(location_for_results, sample_rate, src_dirs):
         count = count + 1
         if count == sample_rate:
             print "Running line count for " + git_commit
-            GitRepo().hard_reset(git_commit)
-            by_date_counts.append(linecount_for_date(date, git_commit, src_dirs, data))
+            git_repo.hard_reset(git_commit)
+            by_date_counts.append(linecount_for_date(date, git_commit, src_dirs, data, working_dir))
             count = 0
         else:
             print "Skipping " + git_commit
@@ -153,7 +158,7 @@ def line_counts(location_for_results, sample_rate, src_dirs):
     data.write(as_csv(by_date_counts))
 
     print "Resetting to " + head
-    GitRepo().hard_reset(head)
+    git_repo.hard_reset(head)
 
     print data.name
     data.close()
@@ -176,20 +181,27 @@ def execution_path(filename):
 
 RUNNING_FROM =  os.path.abspath(execution_path('run.sh'))
 
-def main():
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+
     parser = OptionParser()
     parser.add_option("-r", "--results_dir", action="store", dest="result_dir", type="string", default=".", help="Location where results will be stored")
     parser.add_option("-s", "--source_dir", action="store", dest="src_dirs", type="string", default="src", help="A comma seperated list of directories to parse")
     parser.add_option("-f", "--frequency_of_sample", action="store", dest="sample_rate", default=100, type="int", help="How often should a sample be made")
+    parser.add_option("-g", "--git_repo_dir", action="store", dest="git_repo_dir", default=".", type="string", help="The directory containing the .git file")
+    parser.add_option("-w", "--working_dir", action="store", dest="working_dir", default=".", type="string", help="Where will files be checked out to for line counts etc")
 
-    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args(argv)
 
     results_dir = options.result_dir
     sample_rate = options.sample_rate
     src_dirs_str = options.src_dirs
+    git_dir = options.git_repo_dir
+    working_dir = options.working_dir
     print "Using a sample rate of " + str(sample_rate) + " reading from files " + str(src_dirs_str)
 
-    line_counts(results_dir, sample_rate, src_dirs_str.split(','))
+    line_counts(results_dir, sample_rate, src_dirs_str.split(','), git_dir, working_dir)
     
 
 if __name__ == "__main__":

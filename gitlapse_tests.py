@@ -1,6 +1,9 @@
 import nose
 from nose.tools import *
 from gitlapse import *
+import tempfile
+import shutil
+import os
 
 def main():
     nosemain()
@@ -86,6 +89,12 @@ def test_can_generate_gnuplot_for_table_data():
 "line_count_by_time.tsv" using 1:8 title "web-PHP", \
 """, gnuplot_data)
 
+def test_end_to_end():
+    tmp_dir = tempfile.mkdtemp()
+    shutil.copytree('.git', tmp_dir + '/repodir')
+    main(('--git_repo_dir', tmp_dir + '/repodir', '--working-dir', tmp_dir, '--frequency_of_sample', '5', '--results_dir', tmp_dir, 'src', 'tmp_dir'))
+    files = os.listdir(tmp_dir)
+    assert_true('line_count_by_time.tsv' in files, 'Cannot find results in ' + str(files))
 
 if __name__ == "__main__":
     main()
