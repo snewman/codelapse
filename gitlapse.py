@@ -5,31 +5,34 @@ import tempfile
 import sys
 from optparse import OptionParser
 
-def execute(command):
-    try:
-        print "Running " + command
-        p = Popen(command, shell=True, stdout=PIPE)
-        retcode = os.waitpid(p.pid, 0)[1]
-        if retcode < 0:
-            print >>sys.stderr, "Child was terminated by signal", -retcode
-            sys.exit(retcode)
-        else:
-            return p.stdout
-    except OSError, e:
-        print >>sys.stderr, "Execution failed:", e
-        sys.exit(2)
+class Executor:
+
+    def execute(self, command):
+        try:
+            print "Running " + command
+            p = Popen(command, shell=True, stdout=PIPE)
+            retcode = os.waitpid(p.pid, 0)[1]
+            if retcode < 0:
+                print >>sys.stderr, "Child was terminated by signal", -retcode
+                sys.exit(retcode)
+            else:
+                return p.stdout
+        except OSError, e:
+            print >>sys.stderr, "Execution failed:", e
+            sys.exit(2)
 
 class GitRepo:
 
     def __init__(self, git_dir, working_dir):
         self.git_dir = git_dir
         self.working_dir = working_dir
+        self.executor = Executor()
 
     def current_head(self):
-        return execute('git --git-dir=' + self.git_dir + ' log --format=format:"%H" -1').read()
+        return self.executor.execute('git --git-dir=' + self.git_dir + ' log --format=format:"%H" -1').read()
 
     def list_commits_to_file(self, destination_file_name):
-        execute('git --git-dir=' + self.git_dir + ' --no-pager log --format=format:"%H || %ai || %s%n" --date=iso > ' + destination_file_name)
+        self.executor.execute('git --git-dir=' + self.git_dir + ' --no-pager log --format=format:"%H || %ai || %s%n" --date=iso > ' + destination_file_name)
         return open(destination_file_name)
 
     def commits(self, destination_file_name):
@@ -46,7 +49,7 @@ class GitRepo:
         return list_of_commits
     
     def hard_reset(self, commit_hash):
-        execute('git --git-dir=' + self.git_dir + ' --work-tree=' + self.working_dir + ' reset --hard %s' % commit_hash)
+        self.executor.execute('git --git-dir=' + self.git_dir + ' --work-tree=' + self.working_dir + ' reset --hard %s' % commit_hash)
 
 class ByDateLineCount:
     def __init__(self, date, commit):
@@ -128,7 +131,7 @@ def as_csv(by_date_records):
 def linecount_for_date(date, commit, src_dirs, datafile, working_dir):
     cloc_for_dirs = {}
     for src_dir in src_dirs:
-        cloc_for_dirs[src_dir] = execute('perl ' + RUNNING_FROM + '/tools/cloc-1.08.pl ' + working_dir + '/' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet').read() 
+        cloc_for_dirs[src_dir] = Executor().execute('perl ' + RUNNING_FROM + '/tools/cloc-1.08.pl ' + working_dir + '/' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet').read() 
 
     return parse_cloc_output(cloc_for_dirs, date, commit)
             
