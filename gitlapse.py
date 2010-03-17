@@ -17,6 +17,7 @@ def execute(command):
             return p.stdout
     except OSError, e:
         print >>sys.stderr, "Execution failed:", e
+        sys.exit(2)
 
 class GitRepo:
 
@@ -177,9 +178,15 @@ def to_gnuplot(data_table):
     return gnuplot
 
 def execution_path(filename):
-  return os.path.join(os.path.dirname(inspect.getfile(sys._getframe(1))), filename)
+  execution_path = os.path.join(os.path.dirname(inspect.getfile(sys._getframe(1))), 'run.sh')
+  path_to_run = os.path.abspath(execution_path)
+  if path_to_run.endswith('run.sh'):
+      index_of_run = len(path_to_run) - 6
+      return path_to_run[:index_of_run]
+  else:
+      return path_to_run
 
-RUNNING_FROM =  os.path.abspath(execution_path('run.sh'))
+RUNNING_FROM =  execution_path('run.sh')
 
 def main(argv=None):
     if argv is None:
