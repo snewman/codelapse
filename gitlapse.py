@@ -64,7 +64,7 @@ def create_record(src_dir, by_date_count, cloc_line):
     records = cloc_line.split(',')
 
     if len(records) < 7:
-        raise Exception('Cannot parse line \"' + cloc_line + '\"')
+        raise Exception('Cannot parse line "' + cloc_line + '"')
 
     number_of_files = records[0]
     language = records[1]
@@ -79,10 +79,12 @@ def create_record(src_dir, by_date_count, cloc_line):
 
 def parse_cloc_output(cloc_output, date, commit):
     by_date_count = ByDateLineCount(date, commit)
-
+    
     for src_dir in cloc_output.keys():
         lines = cloc_output[src_dir].split('\n')
-        
+    
+        print "Parsing " + cloc_output[src_dir]
+
         for line in lines:
             if 'files' in line:
                 continue
@@ -180,11 +182,13 @@ def to_gnuplot(data_table):
 def execution_path(filename):
   execution_path = os.path.join(os.path.dirname(inspect.getfile(sys._getframe(1))), 'run.sh')
   path_to_run = os.path.abspath(execution_path)
+ 
   if path_to_run.endswith('run.sh'):
       index_of_run = len(path_to_run) - 6
-      return path_to_run[:index_of_run]
-  else:
-      return path_to_run
+      path_to_run = path_to_run[:index_of_run]
+
+  print "Using " + path_to_run 
+  return path_to_run
 
 RUNNING_FROM =  execution_path('run.sh')
 
