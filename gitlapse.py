@@ -52,6 +52,17 @@ class GitRepo:
     def hard_reset(self, commit_hash):
         self.executor.execute('git --git-dir=' + self.git_dir + ' --work-tree=' + self.working_dir + ' reset --hard %s' % commit_hash)
 
+class CheckstyleParser:
+    
+    def parse(self, checkstyle_report_content):
+        dom = parseString(checkstyle_report_content)
+        root = dom.getElementsByTagName('checkstyle')[0]
+        classes = root.getElementsByTagName('file')
+        class_names = [clazz.getAttribute('name') for clazz in classes]
+
+        return CheckstyleReport(class_names)
+
+
 class CheckstyleAnalyser:
 
     def __init__(self, executor, path_to_install):
@@ -64,17 +75,7 @@ class CheckstyleAnalyser:
         stdout = self.executor.execute('java -jar %s/tools/checkstyle/checkstyle-all-4.4.jar -c %s/tools/checkstyle/metrics.xml -r %s -f xml' % (self.path_to_install, self.path_to_install, src_directory))
         return stdout.read()
 
-    def to_record(self, checkstyle_report_content):
-        dom = parseString(checkstyle_report_content)
-        root = dom.getElementsByTagName('checkstyle')[0]
-        classes = root.getElementsByTagName('file')
-        class_names = []
-
-        for clazz in classes:
-            class_names.append(clazz.getAttribute('name'))
-
-        return CheckstyleReport(class_names)
-
+        
 class CheckstyleReport:
 
     def __init__(self, class_names):
