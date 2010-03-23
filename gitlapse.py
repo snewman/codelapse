@@ -58,9 +58,10 @@ class CheckstyleParser:
         dom = parseString(checkstyle_report_content)
         root = dom.getElementsByTagName('checkstyle')[0]
         classes = root.getElementsByTagName('file')
-        class_names = [clazz.getAttribute('name') for clazz in classes]
+        healthy_class_names = [clazz.getAttribute('name') for clazz in classes if len(clazz.getElementsByTagName('error')) == 0]
+        unhealthy_class_names = [clazz.getAttribute('name') for clazz in classes if len(clazz.getElementsByTagName('error')) > 0]
 
-        return CheckstyleReport(class_names)
+        return CheckstyleReport(healthy_class_names, unhealthy_class_names)
 
 
 class CheckstyleAnalyser:
@@ -78,11 +79,15 @@ class CheckstyleAnalyser:
         
 class CheckstyleReport:
 
-    def __init__(self, class_names):
-        self.class_names = class_names
+    def __init__(self, healthy_class_names, unhealthy_class_names):
+        self.healthy_class_names = healthy_class_names
+        self.unhealthy_class_names = unhealthy_class_names
 
     def number_of_healty_classes(self):
-        return len(self.class_names)
+        return len(self.healthy_class_names)
+
+    def number_of_unhealthy_classes(self):
+        return len(self.unhealthy_class_names)
 
 class ByDateLineCount:
     def __init__(self, date, commit):

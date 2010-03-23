@@ -67,7 +67,25 @@ class CheckstyleReportParserTests(unittest.TestCase):
         report = parser.parse(sample_checkstyle_report)
         assert_equals(3, report.number_of_healty_classes())
  
-
+    def test_can_determine_unhealthy_classes(self):
+        sample_checkstyle_report = """<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="4.4">
+<file name="src/some/package/DoStuff.java">
+<error line="1" severity="warning" message="File length is 541 lines (max allowed is 500)." source="com.puppycrawl.tools.checkstyle.checks.sizes.FileLengthCheck"/>
+</file>
+<file name="src/some/package/SomethingElse.java">
+</file>
+<file name="src/some/other/package/DoStuff.java">
+<error line="60" column="12" severity="warning" message="More than 6 parameters." source="com.puppycrawl.tools.checkstyle.checks.sizes.ParameterNumberCheck"/>
+<error line="81" column="5" severity="warning" message="Method length is 38 lines (max allowed is 30)." source="com.puppycrawl.tools.checkstyle.checks.sizes.MethodLengthCheck"/>
+</file>
+</checkstyle>
+"""
+        parser = gitlapse.CheckstyleParser()
+        report = parser.parse(sample_checkstyle_report)
+        assert_equals(1, report.number_of_healty_classes())
+        assert_equals(2, report.number_of_unhealthy_classes())
+        
 
 class GitLapseTests(unittest.TestCase):
 
