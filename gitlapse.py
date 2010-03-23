@@ -4,6 +4,7 @@ from subprocess import *
 import tempfile
 import sys
 from optparse import OptionParser
+from xml.dom.minidom import parseString
 
 class Executor:
 
@@ -62,6 +63,25 @@ class CheckstyleAnalyser:
 
         stdout = self.executor.execute('java -jar %s/tools/checkstyle/checkstyle-all-4.4.jar -c %s/tools/checkstyle/metrics.xml -r %s -f xml' % (self.path_to_install, self.path_to_install, src_directory))
         return stdout.read()
+
+    def to_record(self, checkstyle_report_content):
+        dom = parseString(checkstyle_report_content)
+        root = dom.getElementsByTagName('checkstyle')[0]
+        classes = root.getElementsByTagName('file')
+        class_names = []
+
+        for clazz in classes:
+            class_names.append(clazz.getAttribute('name'))
+
+        return CheckstyleReport(class_names)
+
+class CheckstyleReport:
+
+    def __init__(self, class_names):
+        self.class_names = class_names
+
+    def number_of_healty_classes(self):
+        return len(self.class_names)
 
 class ByDateLineCount:
     def __init__(self, date, commit):

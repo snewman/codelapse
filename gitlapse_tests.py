@@ -50,6 +50,22 @@ class CheckstyleAnalyserTests(unittest.TestCase):
         assert_equal('Some XML', analyser.analyse(src_dir))
         assert_equal(expected_command, executor.last_command)
         
+    def test_can_get_number_of_healty_classes(self):
+        sample_checkstyle_report = """<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="4.4">
+<file name="src/some/package/DoStuff.java">
+</file>
+<file name="src/some/package/SomethingElse.java">
+</file>
+<file name="src/some/other/package/DoStuff.java">
+</file>
+</checkstyle>
+"""
+        analyser = gitlapse.CheckstyleAnalyser(None, None)
+        report = analyser.to_record(sample_checkstyle_report)
+        assert_equals(3, report.number_of_healty_classes())
+
+
 class GitLapseTests(unittest.TestCase):
 
     def test_can_create_record(self):
