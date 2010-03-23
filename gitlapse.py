@@ -63,8 +63,11 @@ class CheckstyleParser:
         unhealthy_classes = []
         for clazz in classes:
             if len(clazz.getElementsByTagName('error')) > 0:
-                    errors = [clazz.getAttribute('message') for error in clazz.getElementsByTagName('error')]
-                    unhealthy_classes.append(ToxicClass(clazz.getAttribute('name'), errors))
+                errors = {}
+                for error in clazz.getElementsByTagName('error'):
+                         errors[error.getAttribute('source')] = error.getAttribute('message')
+
+                unhealthy_classes.append(ToxicClass(clazz.getAttribute('name'), errors))
 
 
         return ToxicityReport(healthy_class_names, unhealthy_classes)
@@ -87,6 +90,7 @@ class ToxicClass:
     def __init__(self, class_name, errors):
         self.errors = errors
         
+
 class ToxicityReport:
 
     def __init__(self, healthy_class_names, unhealthy_class_names):
@@ -98,6 +102,22 @@ class ToxicityReport:
 
     def number_of_unhealthy_classes(self):
         return len(self.unhealthy_class_names)
+
+class ToxicityCalculator():
+
+    def __init__(self):
+        self.handlers = {'com.puppycrawl.tools.checkstyle.checks.sizes.MethodLengthCheck' : self.parse_method_length_error}
+
+    def parse_method_length_error(self, message_string):
+        return 1.0
+
+    def toxicity(self, errors):
+        score = 0.0
+
+        for error_type in errors.keys():
+            score = score + self.handlers[error_type](errors[error_type])
+
+        return score
 
 class ByDateLineCount:
     def __init__(self, date, commit):

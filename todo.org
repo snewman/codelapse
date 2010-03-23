@@ -7,6 +7,7 @@
 ** DONE Add markdown readme
 ** DONE Add cloc to checkin
 ** TODO Add a licence file (esp. for cloc)
+** TODO Generate metrics.xml file dynamically from the constraints in python (or do the reverse) to ensure we don't duplicate the thresholds
 ** DONE Break tests up into tests for each class
 ** DONE Add end to end smoke tesst
 ** TODO Add support to ignore a directory which is not there

@@ -85,7 +85,15 @@ class CheckstyleReportParserTests(unittest.TestCase):
         report = parser.parse(sample_checkstyle_report)
         assert_equals(1, report.number_of_healty_classes())
         assert_equals(2, report.number_of_unhealthy_classes())
-        
+   
+class ToxicityCalculatorTests(unittest.TestCase):
+
+    def test_can_calculate_the_toxicity_for_high_method_line_count(self):
+        errors = {'com.puppycrawl.tools.checkstyle.checks.sizes.MethodLengthCheck' : 'Method length is 38 lines (max allowed is 30).'}
+
+        calculator = gitlapse.ToxicityCalculator()
+        assert_equals(1.3, calculator.toxicity(errors))
+
 
 class GitLapseTests(unittest.TestCase):
 
