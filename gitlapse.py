@@ -51,6 +51,18 @@ class GitRepo:
     def hard_reset(self, commit_hash):
         self.executor.execute('git --git-dir=' + self.git_dir + ' --work-tree=' + self.working_dir + ' reset --hard %s' % commit_hash)
 
+class CheckstyleAnalyser:
+
+    def __init__(self, executor, path_to_install):
+        self.executor = executor
+        self.path_to_install = path_to_install
+
+    def analyse(self, src_directory):
+         #java -jar ../../code-time-lapse/tools/checkstyle/checkstyle-all-4.4.jar -c ../../code-time-lapse/tools/checkstyle/metrics.xml -r src -f xml
+
+        stdout = self.executor.execute('java -jar %s/tools/checkstyle/checkstyle-all-4.4.jar -c %s/tools/checkstyle/metrics.xml -r %s -f xml' % (self.path_to_install, self.path_to_install, src_directory))
+        return stdout.read()
+
 class ByDateLineCount:
     def __init__(self, date, commit):
         self.date = date
