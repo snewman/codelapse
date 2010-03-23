@@ -59,9 +59,15 @@ class CheckstyleParser:
         root = dom.getElementsByTagName('checkstyle')[0]
         classes = root.getElementsByTagName('file')
         healthy_class_names = [clazz.getAttribute('name') for clazz in classes if len(clazz.getElementsByTagName('error')) == 0]
-        unhealthy_class_names = [clazz.getAttribute('name') for clazz in classes if len(clazz.getElementsByTagName('error')) > 0]
 
-        return CheckstyleReport(healthy_class_names, unhealthy_class_names)
+        unhealthy_classes = []
+        for clazz in classes:
+            if len(clazz.getElementsByTagName('error')) > 0:
+                    errors = [clazz.getAttribute('message') for error in clazz.getElementsByTagName('error')]
+                    unhealthy_classes.append(ToxicClass(clazz.getAttribute('name'), errors))
+
+
+        return ToxicityReport(healthy_class_names, unhealthy_classes)
 
 
 class CheckstyleAnalyser:
@@ -76,8 +82,12 @@ class CheckstyleAnalyser:
         stdout = self.executor.execute('java -jar %s/tools/checkstyle/checkstyle-all-4.4.jar -c %s/tools/checkstyle/metrics.xml -r %s -f xml' % (self.path_to_install, self.path_to_install, src_directory))
         return stdout.read()
 
+class ToxicClass:
+    
+    def __init__(self, class_name, errors):
+        self.errors = errors
         
-class CheckstyleReport:
+class ToxicityReport:
 
     def __init__(self, healthy_class_names, unhealthy_class_names):
         self.healthy_class_names = healthy_class_names
