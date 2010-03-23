@@ -7,7 +7,7 @@
 ** DONE Add markdown readme
 ** DONE Add cloc to checkin
 ** TODO Add a licence file (esp. for cloc)
-** TODO Break tests up into tests for each class
+** DONE Break tests up into tests for each class
 ** DONE Add end to end smoke tesst
 ** TODO Add support to ignore a directory which is not there
 ** TODO Start adding support for checktyle
