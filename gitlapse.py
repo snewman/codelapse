@@ -5,6 +5,8 @@ import tempfile
 import sys
 from optparse import OptionParser
 from xml.dom.minidom import parseString
+import re
+from decimal import *
 
 class Executor:
 
@@ -109,15 +111,22 @@ class ToxicityCalculator():
         self.handlers = {'com.puppycrawl.tools.checkstyle.checks.sizes.MethodLengthCheck' : self.parse_method_length_error}
 
     def parse_method_length_error(self, message_string):
-        return 1.0
+        pattern = 'Method length is (\d*) lines \(max allowed is (\d*)\).'
+        match = re.search(pattern, message_string)
+        actual = Decimal(match.group(1))
+        allowed = Decimal(match.group(2))
+        return actual / allowed
 
     def toxicity(self, errors):
-        score = 0.0
+        score = Decimal(0)
 
         for error_type in errors.keys():
             score = score + self.handlers[error_type](errors[error_type])
 
-        return score
+        return self.round_down(score)
+
+    def round_down(self, decimal):
+        return decimal.quantize(Decimal('.01'), rounding=ROUND_DOWN)
 
 class ByDateLineCount:
     def __init__(self, date, commit):

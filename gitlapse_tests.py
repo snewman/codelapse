@@ -5,6 +5,7 @@ import tempfile
 import shutil
 import os
 import unittest
+from decimal import Decimal
 
 def main():
     nosemain()
@@ -92,7 +93,7 @@ class ToxicityCalculatorTests(unittest.TestCase):
         errors = {'com.puppycrawl.tools.checkstyle.checks.sizes.MethodLengthCheck' : 'Method length is 38 lines (max allowed is 30).'}
 
         calculator = gitlapse.ToxicityCalculator()
-        assert_equals(1.3, calculator.toxicity(errors))
+        assert_equals(Decimal('1.26'), calculator.toxicity(errors))
 
 
 class GitLapseTests(unittest.TestCase):
