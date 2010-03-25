@@ -89,7 +89,7 @@ class CheckstyleReportParserTests(unittest.TestCase):
    
 class ToxicityCalculatorTests(unittest.TestCase):
 
-    def test_can_calculate_the_toxicity_for_high_method_line_count(self):
+    def test_can_calculate_the_toxicity_for_long_method_line_count(self):
         errors = {'com.puppycrawl.tools.checkstyle.checks.sizes.MethodLengthCheck' : 'Method length is 38 lines (max allowed is 30).'}
 
         calculator = gitlapse.ToxicityCalculator()
@@ -101,6 +101,11 @@ class ToxicityCalculatorTests(unittest.TestCase):
         calculator = gitlapse.ToxicityCalculator()
         assert_equals(Decimal('1.18'), calculator.toxicity(errors))
 
+    def test_can_calculate_toxicity_for_class_abstraction_coupling(self):
+        errors = {'com.puppycrawl.tools.checkstyle.checks.metrics.ClassDataAbstractionCouplingCheck': 'Class Data Abstraction Coupling is 20 (max allowed is 10) classes [A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T].'}
+
+        calculator = gitlapse.ToxicityCalculator()
+        assert_equals(Decimal('2.00'), calculator.toxicity(errors))
 
 class GitLapseTests(unittest.TestCase):
 

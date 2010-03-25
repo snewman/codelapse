@@ -110,21 +110,23 @@ class ToxicityCalculator():
     def __init__(self):
         self.handlers = {
             'com.puppycrawl.tools.checkstyle.checks.sizes.MethodLengthCheck' : self.calculate_long_method_length_cost,
-            'com.puppycrawl.tools.checkstyle.checks.sizes.FileLengthCheck' : self.calculate_long_class_cost}
+            'com.puppycrawl.tools.checkstyle.checks.sizes.FileLengthCheck' : self.calculate_long_class_cost,
+            'com.puppycrawl.tools.checkstyle.checks.metrics.ClassDataAbstractionCouplingCheck' : self.calculate_abstraction_coupling_cost}
+
+    def calculate_abstraction_coupling_cost(self, message_string):
+        values = self.matches('Class Data Abstraction Coupling is (\d*) \(max allowed is (\d*)\)', message_string)
+        return self.cost(values[0], values[1])
 
     def calculate_long_method_length_cost(self, message_string):
-        pattern = 'Method length is (\d*) lines \(max allowed is (\d*)\).'
-        match = re.search(pattern, message_string)
-        actual = Decimal(match.group(1))
-        allowed = Decimal(match.group(2))
-        return actual / allowed
+        values = self.matches('Method length is (\d*) lines \(max allowed is (\d*)\).', message_string)
+        return self.cost(values[0], values[1])
 
     def calculate_long_class_cost(self, message_string):
-        pattern =  'File length is (\d*) lines \(max allowed is (\d*)\).'
-        match = re.search(pattern, message_string)
-        actual = Decimal(match.group(1))
-        allowed = Decimal(match.group(2))
-        return actual / allowed
+        values = self.matches('File length is (\d*) lines \(max allowed is (\d*)\)', message_string)
+        return self.cost(values[0], values[1])
+
+    def matches(self, pattern, string):
+        return re.search(pattern, string).groups()
 
     def toxicity(self, errors):
         score = Decimal(0)
@@ -133,6 +135,9 @@ class ToxicityCalculator():
             score = score + self.handlers[error_type](errors[error_type])
 
         return self.round_down(score)
+
+    def cost(self, actual, allowed):
+        return Decimal(actual) / Decimal(allowed)
 
     def round_down(self, decimal):
         return decimal.quantize(Decimal('.01'), rounding=ROUND_DOWN)
