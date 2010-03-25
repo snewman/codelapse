@@ -108,10 +108,19 @@ class ToxicityReport:
 class ToxicityCalculator():
 
     def __init__(self):
-        self.handlers = {'com.puppycrawl.tools.checkstyle.checks.sizes.MethodLengthCheck' : self.parse_method_length_error}
+        self.handlers = {
+            'com.puppycrawl.tools.checkstyle.checks.sizes.MethodLengthCheck' : self.calculate_long_method_length_cost,
+            'com.puppycrawl.tools.checkstyle.checks.sizes.FileLengthCheck' : self.calculate_long_class_cost}
 
-    def parse_method_length_error(self, message_string):
+    def calculate_long_method_length_cost(self, message_string):
         pattern = 'Method length is (\d*) lines \(max allowed is (\d*)\).'
+        match = re.search(pattern, message_string)
+        actual = Decimal(match.group(1))
+        allowed = Decimal(match.group(2))
+        return actual / allowed
+
+    def calculate_long_class_cost(self, message_string):
+        pattern =  'File length is (\d*) lines \(max allowed is (\d*)\).'
         match = re.search(pattern, message_string)
         actual = Decimal(match.group(1))
         allowed = Decimal(match.group(2))

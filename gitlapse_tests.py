@@ -95,6 +95,12 @@ class ToxicityCalculatorTests(unittest.TestCase):
         calculator = gitlapse.ToxicityCalculator()
         assert_equals(Decimal('1.26'), calculator.toxicity(errors))
 
+    def test_can_calculate_the_toxicity_for_long_classes(self):
+        errors = {'com.puppycrawl.tools.checkstyle.checks.sizes.FileLengthCheck' : 'File length is 594 lines (max allowed is 500).'}
+
+        calculator = gitlapse.ToxicityCalculator()
+        assert_equals(Decimal('1.18'), calculator.toxicity(errors))
+
 
 class GitLapseTests(unittest.TestCase):
 
