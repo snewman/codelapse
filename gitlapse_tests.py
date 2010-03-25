@@ -6,6 +6,7 @@ import shutil
 import os
 import unittest
 from decimal import Decimal
+from nose.plugins.attrib import attr
 
 def main():
     nosemain()
@@ -192,6 +193,7 @@ files,language,blank,comment,code,scale,3rd gen. equiv,"http://cloc.sourceforge.
 
 class EndToEndTests(unittest.TestCase):
 
+    @attr('large')
     def test_end_to_end(self):
         tmp_dir = tempfile.mkdtemp()
         shutil.copytree('.git', tmp_dir + '/repodir')
