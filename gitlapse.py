@@ -241,12 +241,21 @@ class LinesOfCodeAnalyser:
         self.abs_src_directory = abs_src_directory
         self.data_store = data_store
 
-    def analyse(self, commit_hash):
+    def analyse(self, commit_hash, commit_date):
         cloc_cmd = 'perl %s/tools/cloc-1.08.pl %s --csv --exclude-lang=CSS,HTML,XML --quiet' % (self.running_from, self.abs_src_directory)
         cloc_result = self.executor.execute(cloc_cmd)
         data_to_store = self.parser.parse(cloc_result.read())
         self.data_store.store(data_to_store)
     
+
+class CompositeAnalyser:
+
+    def __init__(self, *delegates):
+        self.delegates = delegates
+
+    def analyse(self, commit_hash, commit_date):
+        for delegate in self.delegates:
+            delegate.analyse(commit_hash, commit_date)
 
 class ByDateLineCount:
     def __init__(self, date, commit):

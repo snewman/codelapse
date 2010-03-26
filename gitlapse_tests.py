@@ -174,6 +174,21 @@ class TsvFormattingStoreTests(unittest.TestCase):
         assert_equal(lines[1], '1st March\t4452\t124\t123')
             
 
+class CompositeAnalyserTests(unittest.TestCase):
+
+    def test_should_invoke_all_delegates(self):
+        delegate1 = MockAnalyser()
+        delegate2 = MockAnalyser()
+
+        composite = gitlapse.CompositeAnalyser(delegate1, delegate2)
+
+        composite.analyse('hash1', 'date2')
+
+        assert_equals('hash1', delegate1.analysed)
+        assert_equals('date2', delegate1.commit_date)
+        assert_equals('hash1', delegate2.analysed)
+        assert_equals('date2', delegate2.commit_date)
+
 class GitLapseTests(unittest.TestCase):
 
 
@@ -222,9 +237,7 @@ class GitLapseTests(unittest.TestCase):
 "line_count_by_time.tsv" using 1:8 title "web-PHP", \
 """, gnuplot_data)
 
-class SkippingAnalyserTests(unittest.TestCase):
-
-    class MockAnalyser():
+class MockAnalyser():
 
         def __init__(self):
             self.analysed = None
@@ -232,6 +245,8 @@ class SkippingAnalyserTests(unittest.TestCase):
         def analyse(self, commit_hash, commit_date):
             self.analysed = commit_hash
             self.commit_date = commit_date
+
+class SkippingAnalyserTests(unittest.TestCase):
 
     class MockGitRepo():
 
@@ -242,7 +257,7 @@ class SkippingAnalyserTests(unittest.TestCase):
             self.last_hard_reset = last_hard_reset
 
     def test_should_not_invoke_analyser_if_commit_limit_not_reached(self):
-        mock_analyser_delegate = self.MockAnalyser()
+        mock_analyser_delegate = MockAnalyser()
         mock_git_repo = self.MockGitRepo()
 
         skipping_analyser = gitlapse.SkippingAnalyser(skipping_commits = 2, delegate_analyser = mock_analyser_delegate, git_repo = mock_git_repo)
@@ -252,7 +267,7 @@ class SkippingAnalyserTests(unittest.TestCase):
         assert_equals(None, mock_git_repo.last_hard_reset)
 
     def test_should_only_invoke_analyser_if_commit_limit_reached(self):
-        mock_analyser_delegate = self.MockAnalyser()
+        mock_analyser_delegate = MockAnalyser()
         mock_git_repo = self.MockGitRepo()
 
         skipping_analyser = gitlapse.SkippingAnalyser(skipping_commits = 1, delegate_analyser = mock_analyser_delegate, git_repo = mock_git_repo)
@@ -288,7 +303,7 @@ class LinesOfCodeAnalyserTests(unittest.TestCase):
 
         analyser = gitlapse.LinesOfCodeAnalyser(executor = mock_executor, parser = mock_parser, running_from = '/running/from', data_store = mock_store, abs_src_directory = '/path/to/src')
 
-        analyser.analyse('some_hash')
+        analyser.analyse('some_hash', None)
         assert_equals('perl /running/from/tools/cloc-1.08.pl /path/to/src --csv --exclude-lang=CSS,HTML,XML --quiet', mock_executor.last_command)
         assert_equals('cloc_output', mock_parser.last_parse)
         assert_equals('lines_of_code_data', mock_store.last_store)
