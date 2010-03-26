@@ -38,7 +38,7 @@ class GitRepoTests(unittest.TestCase):
         expected_command = 'git --git-dir=gitdir log --format=format:"%H" -1'
         assert_equals(expected_command, executor.last_command)
         
-class CheckstyleAnalyserTests(unittest.TestCase):
+class CheckstyleExecutionTests(unittest.TestCase):
     
     def test_can_run_analysis_on_src_dir(self):
         executor = MockExecutor('Some XML')
@@ -48,7 +48,7 @@ class CheckstyleAnalyserTests(unittest.TestCase):
 
         expected_command = 'java -jar %s/tools/checkstyle/checkstyle-all-4.4.jar -c %s/tools/checkstyle/metrics.xml -r %s -f %s' % (install_dir, install_dir, src_dir, format)
 
-        analyser = gitlapse.CheckstyleAnalyser(executor, "/some/install/dir")
+        analyser = gitlapse.CheckstyleExecution(executor, "/some/install/dir")
         assert_equal('Some XML', analyser.analyse(src_dir))
         assert_equal(expected_command, executor.last_command)
         

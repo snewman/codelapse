@@ -75,7 +75,7 @@ class CheckstyleParser:
         return ToxicityReport(healthy_class_names, unhealthy_classes)
 
 
-class CheckstyleAnalyser:
+class CheckstyleExecution:
 
     def __init__(self, executor, path_to_install):
         self.executor = executor
