@@ -198,20 +198,21 @@ class SkippingAnalyserTests(unittest.TestCase):
         def __init__(self):
             self.analysed = None
         
-        def analyse(self, commit_hash):
+        def analyse(self, commit_hash, commit_date):
             self.analysed = commit_hash
+            self.commit_date = commit_date
 
     def test_should_not_invoke_analyser_if_commit_limit_not_reached(self):
         mock_analyser_delegate = self.MockAnalyser()
         skipping_analyser = gitlapse.SkippingAnalyser(skipping_commits = 2, delegate_analyser = mock_analyser_delegate)
-        skipping_analyser.analyse('some_hash')
+        skipping_analyser.analyse('some_hash', 'some_date')
         assert_equals(None, mock_analyser_delegate.analysed)
 
     def test_should_only_invoke_analyser_if_commit_limit_reached(self):
         mock_analyser_delegate = self.MockAnalyser()
         skipping_analyser = gitlapse.SkippingAnalyser(skipping_commits = 1, delegate_analyser = mock_analyser_delegate)
-        skipping_analyser.analyse('some_hash')
-        skipping_analyser.analyse('some_other_hash')
+        skipping_analyser.analyse('some_hash', 'some_date')
+        skipping_analyser.analyse('some_other_hash', 'some_other_date')
         assert_equals('some_other_hash', mock_analyser_delegate.analysed)
 
 class LinesOfCodeAnalyserTests(unittest.TestCase):

@@ -149,11 +149,11 @@ class SkippingAnalyser:
         self.delegate_analyser = delegate_analyser
         self.current_count = 0
 
-    def analyse(self, commit_hash):
+    def analyse(self, commit_hash, commit_date):
         self.current_count = self.current_count + 1
 
         if self.current_count == self.skipping_commits:
-            self.delegate_analyser.analyse(commit_hash)
+            self.delegate_analyser.analyse(commit_hash, commit_date)
             self.current_count = 0
 
 class LinesOfCodeAnalyser:
@@ -268,21 +268,21 @@ def line_counts(location_for_results, sample_rate, src_dirs, git_dir, working_di
     commit_list = generate_commit_list(location_for_results, git_repo)
     head = git_repo.current_head()
     
-    count = 0
+    class NastyAssAnalyser:
+        
+        def analyse(self, commit, date):
+            git_repo.hard_reset(commit)
+            by_date_counts.append(linecount_for_date(date, git_commit, src_dirs, data, working_dir))
+
+    skipping_analyser = SkippingAnalyser(skipping_commits = sample_rate, delegate_analyser = NastyAssAnalyser())
+
+
     by_date_counts = []
     for commit in commit_list:
         date = commit[1]
         git_commit = commit[0]
+        skipping_analyser.analyse(git_commit, date)
 
-        count = count + 1
-        if count == sample_rate:
-            print "Running line count for " + git_commit
-            git_repo.hard_reset(git_commit)
-            by_date_counts.append(linecount_for_date(date, git_commit, src_dirs, data, working_dir))
-            count = 0
-        else:
-            print "Skipping " + git_commit
-                
     data.write(as_csv(by_date_counts))
 
     print "Resetting to " + head
