@@ -244,13 +244,13 @@ class LinesOfCodeAnalyser:
     def analyse(self, commit_hash, commit_date):
         cloc_cmd = 'perl %s/tools/cloc-1.08.pl %s --csv --exclude-lang=CSS,HTML,XML --quiet' % (self.running_from, self.abs_src_directory)
         cloc_result = self.executor.execute(cloc_cmd)
-        data_to_store = self.parser.parse(cloc_result.read())
+        data_to_store = self.parser.parse(commit_date, commit_hash, self.abs_src_directory, cloc_result.read())
         self.data_store.store(data_to_store)
     
 
 class CompositeAnalyser:
 
-    def __init__(self, *delegates):
+    def __init__(self, delegates):
         self.delegates = delegates
 
     def analyse(self, commit_hash, commit_date):
@@ -359,12 +359,8 @@ def line_counts(location_for_results, sample_rate, src_dirs, git_dir, working_di
     commit_list = generate_commit_list(location_for_results, git_repo)
     head = git_repo.current_head()
     
-    class NastyAssAnalyser:
-        
-        def analyse(self, commit, date):
-            by_date_counts.append(linecount_for_date(date, git_commit, src_dirs, data, working_dir))
-
-    skipping_analyser = SkippingAnalyser(skipping_commits = sample_rate, delegate_analyser = NastyAssAnalyser(), git_repo = git_repo)
+    delegate = CompositeAnalyser([LinesOfCodeAnalyser(src_dir, RUNNING_FROM) for src_dir in src_dirs])
+    skipping_analyser = SkippingAnalyser(skipping_commits = sample_rate, delegate_analyser = delegate, git_repo = git_repo)
 
 
     by_date_counts = []

@@ -180,7 +180,7 @@ class CompositeAnalyserTests(unittest.TestCase):
         delegate1 = MockAnalyser()
         delegate2 = MockAnalyser()
 
-        composite = gitlapse.CompositeAnalyser(delegate1, delegate2)
+        composite = gitlapse.CompositeAnalyser([delegate1, delegate2])
 
         composite.analyse('hash1', 'date2')
 
@@ -285,7 +285,7 @@ class LinesOfCodeAnalyserTests(unittest.TestCase):
             self.returning = returning
             self.last_parse = None
 
-        def parse(self, string_to_parse):
+        def parse(self, date, commit, src, string_to_parse):
             self.last_parse = string_to_parse
             return self.returning
 
