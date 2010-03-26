@@ -178,7 +178,7 @@ class ClocParser:
         return by_date_count
 
     def parse(self, commit_date, commit_hash, src_directory_name, cloc_output):
-        by_date_count = ByDateLineCount(commit_date, commit_hash)
+        by_date_count = MetricsForCommit(commit_date, commit_hash)
         lines = cloc_output.split('\n')
     
         for line in lines:
@@ -198,50 +198,49 @@ class TsvFormattingStore:
     def __init__(self):
         self.records_by_commit = {}
 
-    def store(self, by_date_line_count):
-        commit = by_date_line_count.commit
+    def store(self, metrics_for_commit):
+        commit = metrics_for_commit.commit
 
         if self.records_by_commit.has_key(commit):
             old_record = self.records_by_commit[commit]
-            old_record.merge(by_date_line_count)
+            old_record.merge(metrics_for_commit)
         else:
-            print "Storing " + commit + " at " + by_date_line_count.date
-            self.records_by_commit[commit] = by_date_line_count
+            self.records_by_commit[commit] = metrics_for_commit
 
 
-    def languages_to_report(self):
-        languages_to_report = {}
+    def metrics_to_report(self):
+        metrics_to_report = {}
 
         for record in self.records_by_commit.values():
 
-            for src_dir in record.src_dir.keys():
-                languages_for_dir = languages_to_report.get(src_dir, set())
+            for src_dir in record.src_dirs.keys():
+                metrics_for_dir = metrics_to_report.get(src_dir, set())
             
-                for language in record.src_dir[src_dir].keys():
-                    languages_for_dir.add(language)
+                for metric in record.src_dirs[src_dir].keys():
+                    metrics_for_dir.add(metric)
 
-                    languages_to_report[src_dir] = languages_for_dir
+                    metrics_to_report[src_dir] = metrics_for_dir
         
-        return languages_to_report
+        return metrics_to_report
 
-    def create_row_header(self, languages_to_report):
+    def create_row_header(self, metrics_to_report):
         row_header = 'Date'
-        for src_dir in languages_to_report.keys():
-            for language in languages_to_report[src_dir]:
+        for src_dir in metrics_to_report.keys():
+            for language in metrics_to_report[src_dir]:
                 row_header = row_header + '\t' + src_dir + '-' + language
 
         row_header = row_header + '\n'
         return row_header
     
     def as_csv(self):
-        languages_to_report = self.languages_to_report()
-        row_header = self.create_row_header(languages_to_report)
+        metrics_to_report = self.metrics_to_report()
+        row_header = self.create_row_header(metrics_to_report)
 
         for record in self.records_by_commit.values():
             row_header = row_header + record.date
-            for src_dir in languages_to_report.keys():
-                for language in languages_to_report[src_dir]:
-                    row_header = row_header + '\t' + str(record.src_dir.get(src_dir, {}).get(language, 0))
+            for src_dir in metrics_to_report.keys():
+                for metric in metrics_to_report[src_dir]:
+                    row_header = row_header + '\t' + str(record.src_dirs.get(src_dir, {}).get(metric, 0))
 
             row_header = row_header + '\n'
         
@@ -273,23 +272,23 @@ class CompositeAnalyser:
         for delegate in self.delegates:
             delegate.analyse(commit_hash, commit_date)
 
-class ByDateLineCount:
+class MetricsForCommit:
     def __init__(self, date, commit):
         self.date = date
         self.commit = commit
-        self.src_dir = {}
+        self.src_dirs = {}
 
-    def add_record(self, src_dir, language, count):
-        counts_for_dir = self.src_dir.get(src_dir, {})
-        counts_for_dir[language] = int(count)
-        self.src_dir[src_dir] = counts_for_dir
+    def add_record(self, src_dir, metric, count):
+        counts_for_dir = self.src_dirs.get(src_dir, {})
+        counts_for_dir[metric] = int(count)
+        self.src_dirs[src_dir] = counts_for_dir
 
     def merge(self, other_by_date_count):
         if other_by_date_count.commit != self.commit:
             raise Exception('Can only merge records with same commit')
 
-        for src_dir in other_by_date_count.src_dir.keys():
-            self.src_dir[src_dir] = other_by_date_count.src_dir[src_dir]
+        for src_dir in other_by_date_count.src_dirs.keys():
+            self.src_dirs[src_dir] = other_by_date_count.src_dirs[src_dir]
     
 
 def generate_commit_list(location_for_files, git_repo):

@@ -115,7 +115,7 @@ class ClocParserTests(unittest.TestCase):
         parser = gitlapse.ClocParser()
         cloc_line = "10,Bourne Shell,56,155,252,3.81,960.12"
         by_date_count = parser.parse('somedate', 'somecommit', 'src', cloc_line)
-        assert_equal(by_date_count.src_dir['src']['Bourne Shell'], 252)
+        assert_equal(by_date_count.src_dirs['src']['Bourne Shell'], 252)
 
     def test_can_parse_multiline_cloc_output(self):
         cloc_output = """
@@ -129,8 +129,8 @@ files,language,blank,comment,code,scale,3rd gen. equiv,"http://cloc.sourceforge.
         assert_equal("somedate", by_date_count.date)
         assert_equal("somecommit", by_date_count.commit)
 
-        assert_equal(112, by_date_count.src_dir['src']['Python'])
-        assert_equal(252, by_date_count.src_dir['src']['Bourne Shell'])
+        assert_equal(112, by_date_count.src_dirs['src']['Python'])
+        assert_equal(252, by_date_count.src_dirs['src']['Bourne Shell'])
 
 
 class TsvFormattingStoreTests(unittest.TestCase):
@@ -141,10 +141,10 @@ class TsvFormattingStoreTests(unittest.TestCase):
         assert_equal(lines, 'Date\n')
 
     def test_can_format_with_single_record(self):
-        first_counts = gitlapse.ByDateLineCount('1st March', 'commit1')
+        first_counts = gitlapse.MetricsForCommit('1st March', 'commit1')
         first_counts.add_record('src', 'Java', 123)
 
-        second_counts = gitlapse.ByDateLineCount('2nd March', 'commit2')
+        second_counts = gitlapse.MetricsForCommit('2nd March', 'commit2')
         second_counts.add_record('src', 'Java', 124)
         second_counts.add_record('src', 'C', 4452)
 
@@ -158,10 +158,10 @@ class TsvFormattingStoreTests(unittest.TestCase):
         assert_equal(lines[2], '1st March\t0\t123')
        
     def test_can_format_multiple_records_for_the_same_commit(self): 
-        first_counts = gitlapse.ByDateLineCount('1st March', 'commit3')
+        first_counts = gitlapse.MetricsForCommit('1st March', 'commit3')
         first_counts.add_record('src', 'Java', 123)
 
-        second_counts = gitlapse.ByDateLineCount('1st March', 'commit3')
+        second_counts = gitlapse.MetricsForCommit('1st March', 'commit3')
         second_counts.add_record('test', 'Java', 124)
         second_counts.add_record('test', 'C', 4452)
 
