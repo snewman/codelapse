@@ -108,43 +108,74 @@ class ToxicityCalculatorTests(unittest.TestCase):
         calculator = gitlapse.ToxicityCalculator()
         assert_equals(Decimal('2.00'), calculator.toxicity(errors))
 
-class GitLapseTests(unittest.TestCase):
 
-    def test_can_create_record(self):
+class ClocParserTests(unittest.TestCase):
+
+    def test_can_parse_one_line(self):
+        parser = gitlapse.ClocParser()
         cloc_line = "10,Bourne Shell,56,155,252,3.81,960.12"
-        by_date_count = gitlapse.ByDateLineCount('somedate', 'somecommit')
-        by_date_count = gitlapse.create_record('src', by_date_count, cloc_line)
+        by_date_count = parser.parse('somedate', 'somecommit', 'src', cloc_line)
         assert_equal(by_date_count.src_dir['src']['Bourne Shell'], 252)
 
-    def test_can_convert_multiple_clocs_to_by_date_record(self):
-        cloc_output_1 = """
-files,language,blank,comment,code,scale,3rd gen. equiv,"http://cloc.sourceforge.net v 1.08  T=0.5 s (24.0 files/s, 1206.0 lines/s)"
-10,Bourne Shell,56,155,252,3.81,960.12
-2,Python,28,0,112,4.2,470.4"""
-
-        cloc_output_2 = """
-files,language,blank,comment,code,scale,3rd gen. equiv,"http://cloc.sourceforge.net v 1.08  T=0.5 s (24.0 files/s, 1206.0 lines/s)"
-2,Python,28,0,32,4.2,470.4"""
-
-        by_date_count = gitlapse.parse_cloc_output({'src':cloc_output_1, 'test':cloc_output_2}, "somedate", "somecommit")
-        assert_equal("somedate", by_date_count.date)
-        assert_equal("somecommit", by_date_count.commit)
-
-        assert_equal(112, by_date_count.src_dir['src']['Python'])
-        assert_equal(252, by_date_count.src_dir['src']['Bourne Shell'])
-
-    def test_can_convert_cloc_to_by_date_record(self):
+    def test_can_parse_multiline_cloc_output(self):
         cloc_output = """
 files,language,blank,comment,code,scale,3rd gen. equiv,"http://cloc.sourceforge.net v 1.08  T=0.5 s (24.0 files/s, 1206.0 lines/s)"
 10,Bourne Shell,56,155,252,3.81,960.12
 2,Python,28,0,112,4.2,470.4"""
 
-        by_date_count = gitlapse.parse_cloc_output({'src':cloc_output}, "somedate", "somecommit")
+        parser = gitlapse.ClocParser()
+        by_date_count = parser.parse('somedate', 'somecommit', 'src', cloc_output)
+
         assert_equal("somedate", by_date_count.date)
         assert_equal("somecommit", by_date_count.commit)
 
         assert_equal(112, by_date_count.src_dir['src']['Python'])
         assert_equal(252, by_date_count.src_dir['src']['Bourne Shell'])
+
+
+class TsvFormattingStoreTests(unittest.TestCase):
+
+    def test_can_format_when_no_results(self):
+        store = gitlapse.TsvFormattingStore()
+        lines = store.as_csv()
+        assert_equal(lines, 'Date\n')
+
+    def test_can_format_with_single_record(self):
+        first_counts = gitlapse.ByDateLineCount('1st March', 'commit1')
+        first_counts.add_record('src', 'Java', 123)
+
+        second_counts = gitlapse.ByDateLineCount('2nd March', 'commit2')
+        second_counts.add_record('src', 'Java', 124)
+        second_counts.add_record('src', 'C', 4452)
+
+        store = gitlapse.TsvFormattingStore()
+        store.store(first_counts)
+        store.store(second_counts)
+
+        lines = store.as_csv().split('\n')
+        assert_equal(lines[0], 'Date\tsrc-C\tsrc-Java')
+        assert_equal(lines[1], '2nd March\t4452\t124')
+        assert_equal(lines[2], '1st March\t0\t123')
+       
+    def test_can_format_multiple_records_for_the_same_commit(self): 
+        first_counts = gitlapse.ByDateLineCount('1st March', 'commit3')
+        first_counts.add_record('src', 'Java', 123)
+
+        second_counts = gitlapse.ByDateLineCount('1st March', 'commit3')
+        second_counts.add_record('test', 'Java', 124)
+        second_counts.add_record('test', 'C', 4452)
+
+        store = gitlapse.TsvFormattingStore()
+        store.store(first_counts)
+        store.store(second_counts)
+                
+        lines = store.as_csv().split('\n')
+        assert_equal(lines[0], 'Date\ttest-C\ttest-Java\tsrc-Java')
+        assert_equal(lines[1], '1st March\t4452\t124\t123')
+            
+
+class GitLapseTests(unittest.TestCase):
+
 
     def test_can_format_empty_date_counts_as_tsv(self):
         csv_output = gitlapse.as_csv([])

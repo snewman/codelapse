@@ -158,9 +158,83 @@ class SkippingAnalyser:
             self.delegate_analyser.analyse(commit_hash, commit_date)
             self.current_count = 0
 
+
+class ClocParser:
+
+    def parse(self, commit_date, commit_hash, src_directory_name, cloc_output):
+        by_date_count = ByDateLineCount(commit_date, commit_hash)
+        lines = cloc_output.split('\n')
+    
+        for line in lines:
+            if 'files' in line:
+                continue
+
+            if line.isspace() or len(line) == 0:
+                continue
+
+            by_date_count = create_record(src_directory_name, by_date_count, line)
+
+        return by_date_count
+
+
+class TsvFormattingStore:
+
+    def __init__(self):
+        self.records_by_commit = {}
+
+    def store(self, by_date_line_count):
+        commit = by_date_line_count.commit
+
+        if self.records_by_commit.has_key(commit):
+            old_record = self.records_by_commit[commit]
+            old_record.merge(by_date_line_count)
+        else:
+            print "Storing " + commit + " at " + by_date_line_count.date
+            self.records_by_commit[commit] = by_date_line_count
+
+
+    def languages_to_report(self):
+        languages_to_report = {}
+
+        for record in self.records_by_commit.values():
+
+            for src_dir in record.src_dir.keys():
+                languages_for_dir = languages_to_report.get(src_dir, set())
+            
+                for language in record.src_dir[src_dir].keys():
+                    languages_for_dir.add(language)
+
+                    languages_to_report[src_dir] = languages_for_dir
+        
+        return languages_to_report
+
+    def create_row_header(self, languages_to_report):
+        row_header = 'Date'
+        for src_dir in languages_to_report.keys():
+            for language in languages_to_report[src_dir]:
+                row_header = row_header + '\t' + src_dir + '-' + language
+
+        row_header = row_header + '\n'
+        return row_header
+    
+    def as_csv(self):
+        languages_to_report = self.languages_to_report()
+        row_header = self.create_row_header(languages_to_report)
+
+        for record in self.records_by_commit.values():
+            row_header = row_header + record.date
+            for src_dir in languages_to_report.keys():
+                for language in languages_to_report[src_dir]:
+                    row_header = row_header + '\t' + str(record.src_dir.get(src_dir, {}).get(language, 0))
+
+            row_header = row_header + '\n'
+        
+        return row_header
+
+
 class LinesOfCodeAnalyser:
 
-    def __init__(self, abs_src_directory, parser, running_from, data_store, executor = Executor()):
+    def __init__(self, abs_src_directory, running_from, data_store = TsvFormattingStore(), parser = ClocParser(), executor = Executor()):
         self.executor = executor
         self.parser = parser
         self.running_from = running_from
@@ -172,8 +246,7 @@ class LinesOfCodeAnalyser:
         cloc_result = self.executor.execute(cloc_cmd)
         data_to_store = self.parser.parse(cloc_result.read())
         self.data_store.store(data_to_store)
-        
-
+    
 
 class ByDateLineCount:
     def __init__(self, date, commit):
@@ -185,6 +258,13 @@ class ByDateLineCount:
         counts_for_dir = self.src_dir.get(src_dir, {})
         counts_for_dir[language] = int(count)
         self.src_dir[src_dir] = counts_for_dir
+
+    def merge(self, other_by_date_count):
+        if other_by_date_count.commit != self.commit:
+            raise Exception('Can only merge records with same commit')
+
+        for src_dir in other_by_date_count.src_dir.keys():
+            self.src_dir[src_dir] = other_by_date_count.src_dir[src_dir]
     
 
 def create_record(src_dir, by_date_count, cloc_line):
