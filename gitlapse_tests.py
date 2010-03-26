@@ -191,6 +191,30 @@ files,language,blank,comment,code,scale,3rd gen. equiv,"http://cloc.sourceforge.
 "line_count_by_time.tsv" using 1:8 title "web-PHP", \
 """, gnuplot_data)
 
+class SkippingAnalyserTests(unittest.TestCase):
+
+    class MockAnalyser():
+
+        def __init__(self):
+            self.analysed = None
+        
+        def analyse(self, commit_hash):
+            self.analysed = commit_hash
+
+    def test_should_not_invoke_analyser_if_commit_limit_not_reached(self):
+        mock_analyser_delegate = self.MockAnalyser()
+        skipping_analyser = gitlapse.SkippingAnalyser(skipping_commits = 2, delegate_analyser = mock_analyser_delegate)
+        skipping_analyser.analyse('some_hash')
+        assert_equals(None, mock_analyser_delegate.analysed)
+
+    def test_should_only_invoke_analyser_if_commit_limit_reached(self):
+        mock_analyser_delegate = self.MockAnalyser()
+        skipping_analyser = gitlapse.SkippingAnalyser(skipping_commits = 1, delegate_analyser = mock_analyser_delegate)
+        skipping_analyser.analyse('some_hash')
+        skipping_analyser.analyse('some_other_hash')
+        assert_equals('some_other_hash', mock_analyser_delegate.analysed)
+
+
 class EndToEndTests(unittest.TestCase):
 
     @attr('large')
@@ -200,6 +224,7 @@ class EndToEndTests(unittest.TestCase):
         gitlapse.main(['--git_repo_dir', tmp_dir + '/repodir', '--working_dir', tmp_dir, '--frequency_of_sample', '5', '--results_dir', tmp_dir, '--source_dir', '.'])
         files = os.listdir(tmp_dir)
         assert_true('line_count_by_time.tsv' in files, 'Cannot find results in ' + str(files))
+
 
 if __name__ == "__main__":
     main()

@@ -142,6 +142,21 @@ class ToxicityCalculator():
     def round_down(self, decimal):
         return decimal.quantize(Decimal('.01'), rounding=ROUND_DOWN)
 
+class SkippingAnalyser:
+
+    def __init__(self, skipping_commits, delegate_analyser):
+        self.skipping_commits = skipping_commits
+        self.delegate_analyser = delegate_analyser
+        self.current_count = 0
+
+    def analyse(self, commit_hash):
+        self.current_count = self.current_count + 1
+
+        if self.current_count == self.skipping_commits:
+            self.delegate_analyser.analyse(commit_hash)
+            self.current_count = 0
+
+
 class ByDateLineCount:
     def __init__(self, date, commit):
         self.date = date
