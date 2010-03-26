@@ -234,7 +234,7 @@ class TsvFormattingStore:
 
 class LinesOfCodeAnalyser:
 
-    def __init__(self, abs_src_directory, running_from, data_store = TsvFormattingStore(), parser = ClocParser(), executor = Executor()):
+    def __init__(self, abs_src_directory, running_from, data_store, parser = ClocParser(), executor = Executor()):
         self.executor = executor
         self.parser = parser
         self.running_from = running_from
@@ -359,17 +359,16 @@ def line_counts(location_for_results, sample_rate, src_dirs, git_dir, working_di
     commit_list = generate_commit_list(location_for_results, git_repo)
     head = git_repo.current_head()
     
-    delegate = CompositeAnalyser([LinesOfCodeAnalyser(src_dir, RUNNING_FROM) for src_dir in src_dirs])
+    store = TsvFormattingStore()
+    delegate = CompositeAnalyser([LinesOfCodeAnalyser(src_dir, RUNNING_FROM, store) for src_dir in src_dirs])
     skipping_analyser = SkippingAnalyser(skipping_commits = sample_rate, delegate_analyser = delegate, git_repo = git_repo)
 
-
-    by_date_counts = []
     for commit in commit_list:
         date = commit[1]
         git_commit = commit[0]
         skipping_analyser.analyse(git_commit, date)
 
-    data.write(as_csv(by_date_counts))
+    data.write(store.as_csv())
 
     print "Resetting to " + head
     git_repo.hard_reset(head)
