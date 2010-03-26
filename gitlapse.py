@@ -158,8 +158,24 @@ class SkippingAnalyser:
             self.delegate_analyser.analyse(commit_hash, commit_date)
             self.current_count = 0
 
-
 class ClocParser:
+    
+    def create_record(self, src_dir, by_date_count, cloc_line):
+        records = cloc_line.split(',')
+
+        if len(records) < 7:
+            raise Exception('Cannot parse line "' + cloc_line + '"')
+
+        number_of_files = records[0]
+        language = records[1]
+        number_of_blank_lines = records[2]
+        lines_of_comments = records[3]
+        lines_of_code = records[4]
+        scale = records[5]
+        third_gen = records[6]
+
+        by_date_count.add_record(src_dir, language, lines_of_code)
+        return by_date_count
 
     def parse(self, commit_date, commit_hash, src_directory_name, cloc_output):
         by_date_count = ByDateLineCount(commit_date, commit_hash)
@@ -172,7 +188,7 @@ class ClocParser:
             if line.isspace() or len(line) == 0:
                 continue
 
-            by_date_count = create_record(src_directory_name, by_date_count, line)
+            by_date_count = self.create_record(src_directory_name, by_date_count, line)
 
         return by_date_count
 
@@ -275,23 +291,6 @@ class ByDateLineCount:
         for src_dir in other_by_date_count.src_dir.keys():
             self.src_dir[src_dir] = other_by_date_count.src_dir[src_dir]
     
-
-def create_record(src_dir, by_date_count, cloc_line):
-    records = cloc_line.split(',')
-
-    if len(records) < 7:
-        raise Exception('Cannot parse line "' + cloc_line + '"')
-
-    number_of_files = records[0]
-    language = records[1]
-    number_of_blank_lines = records[2]
-    lines_of_comments = records[3]
-    lines_of_code = records[4]
-    scale = records[5]
-    third_gen = records[6]
-
-    by_date_count.add_record(src_dir, language, lines_of_code)
-    return by_date_count
 
 def generate_commit_list(location_for_files, git_repo):
     file_with_all_commits = location_for_files + "/commits.out"
