@@ -144,15 +144,17 @@ class ToxicityCalculator():
 
 class SkippingAnalyser:
 
-    def __init__(self, skipping_commits, delegate_analyser):
+    def __init__(self, skipping_commits, delegate_analyser, git_repo):
         self.skipping_commits = skipping_commits
         self.delegate_analyser = delegate_analyser
+        self.git_repo = git_repo
         self.current_count = 0
 
     def analyse(self, commit_hash, commit_date):
         self.current_count = self.current_count + 1
 
         if self.current_count == self.skipping_commits:
+            self.git_repo.hard_reset(commit_hash)
             self.delegate_analyser.analyse(commit_hash, commit_date)
             self.current_count = 0
 
@@ -271,10 +273,9 @@ def line_counts(location_for_results, sample_rate, src_dirs, git_dir, working_di
     class NastyAssAnalyser:
         
         def analyse(self, commit, date):
-            git_repo.hard_reset(commit)
             by_date_counts.append(linecount_for_date(date, git_commit, src_dirs, data, working_dir))
 
-    skipping_analyser = SkippingAnalyser(skipping_commits = sample_rate, delegate_analyser = NastyAssAnalyser())
+    skipping_analyser = SkippingAnalyser(skipping_commits = sample_rate, delegate_analyser = NastyAssAnalyser(), git_repo = git_repo)
 
 
     by_date_counts = []

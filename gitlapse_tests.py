@@ -202,18 +202,35 @@ class SkippingAnalyserTests(unittest.TestCase):
             self.analysed = commit_hash
             self.commit_date = commit_date
 
+    class MockGitRepo():
+
+        def __init__(self):
+            self.last_hard_reset = None
+
+        def hard_reset(self, last_hard_reset):
+            self.last_hard_reset = last_hard_reset
+
     def test_should_not_invoke_analyser_if_commit_limit_not_reached(self):
         mock_analyser_delegate = self.MockAnalyser()
-        skipping_analyser = gitlapse.SkippingAnalyser(skipping_commits = 2, delegate_analyser = mock_analyser_delegate)
+        mock_git_repo = self.MockGitRepo()
+
+        skipping_analyser = gitlapse.SkippingAnalyser(skipping_commits = 2, delegate_analyser = mock_analyser_delegate, git_repo = mock_git_repo)
         skipping_analyser.analyse('some_hash', 'some_date')
+
         assert_equals(None, mock_analyser_delegate.analysed)
+        assert_equals(None, mock_git_repo.last_hard_reset)
 
     def test_should_only_invoke_analyser_if_commit_limit_reached(self):
         mock_analyser_delegate = self.MockAnalyser()
-        skipping_analyser = gitlapse.SkippingAnalyser(skipping_commits = 1, delegate_analyser = mock_analyser_delegate)
+        mock_git_repo = self.MockGitRepo()
+
+        skipping_analyser = gitlapse.SkippingAnalyser(skipping_commits = 1, delegate_analyser = mock_analyser_delegate, git_repo = mock_git_repo)
         skipping_analyser.analyse('some_hash', 'some_date')
         skipping_analyser.analyse('some_other_hash', 'some_other_date')
+
         assert_equals('some_other_hash', mock_analyser_delegate.analysed)
+        assert_equals('some_other_hash', mock_git_repo.last_hard_reset)
+
 
 class LinesOfCodeAnalyserTests(unittest.TestCase):
 
