@@ -156,6 +156,22 @@ class SkippingAnalyser:
             self.delegate_analyser.analyse(commit_hash)
             self.current_count = 0
 
+class LinesOfCodeAnalyser:
+
+    def __init__(self, abs_src_directory, parser, running_from, data_store, executor = Executor()):
+        self.executor = executor
+        self.parser = parser
+        self.running_from = running_from
+        self.abs_src_directory = abs_src_directory
+        self.data_store = data_store
+
+    def analyse(self, commit_hash):
+        cloc_cmd = 'perl %s/tools/cloc-1.08.pl %s --csv --exclude-lang=CSS,HTML,XML --quiet' % (self.running_from, self.abs_src_directory)
+        cloc_result = self.executor.execute(cloc_cmd)
+        data_to_store = self.parser.parse(cloc_result.read())
+        self.data_store.store(data_to_store)
+        
+
 
 class ByDateLineCount:
     def __init__(self, date, commit):

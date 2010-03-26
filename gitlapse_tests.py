@@ -214,6 +214,35 @@ class SkippingAnalyserTests(unittest.TestCase):
         skipping_analyser.analyse('some_other_hash')
         assert_equals('some_other_hash', mock_analyser_delegate.analysed)
 
+class LinesOfCodeAnalyserTests(unittest.TestCase):
+
+    class MockParser:
+        def __init__(self, returning):
+            self.returning = returning
+            self.last_parse = None
+
+        def parse(self, string_to_parse):
+            self.last_parse = string_to_parse
+            return self.returning
+
+    class MockTimeSeriesStore:
+        def __init__(self):
+            self.last_store = None
+
+        def store(self, what_to_store):
+            self.last_store = what_to_store
+
+    def test_should_invoke_cloc_on_source_directory(self):
+        mock_executor = MockExecutor('cloc_output')
+        mock_parser = self.MockParser(returning = 'lines_of_code_data')
+        mock_store = self.MockTimeSeriesStore()
+
+        analyser = gitlapse.LinesOfCodeAnalyser(executor = mock_executor, parser = mock_parser, running_from = '/running/from', data_store = mock_store, abs_src_directory = '/path/to/src')
+
+        analyser.analyse('some_hash')
+        assert_equals('perl /running/from/tools/cloc-1.08.pl /path/to/src --csv --exclude-lang=CSS,HTML,XML --quiet', mock_executor.last_command)
+        assert_equals('cloc_output', mock_parser.last_parse)
+        assert_equals('lines_of_code_data', mock_store.last_store)
 
 class EndToEndTests(unittest.TestCase):
 
