@@ -191,42 +191,6 @@ class CompositeAnalyserTests(unittest.TestCase):
 
 class GitLapseTests(unittest.TestCase):
 
-
-    def test_can_format_empty_date_counts_as_tsv(self):
-        csv_output = gitlapse.as_csv([])
-        lines = csv_output.split('\n')
-
-        assert_equal(lines[0], 'Date')
-
-    def test_can_format_single_dir_date_counts_as_tsv(self):
-        first_counts = gitlapse.ByDateLineCount('1st March', 'commit')
-        first_counts.add_record('src', 'Java', 123)
-
-        second_counts = gitlapse.ByDateLineCount('2nd March', 'commit')
-        second_counts.add_record('src', 'Java', 124)
-        second_counts.add_record('src', 'C', 4452)
-
-        csv_output = gitlapse.as_csv([first_counts, second_counts])
-        lines = csv_output.split('\n')
-        assert_equal(lines[0], 'Date\tsrc-C\tsrc-Java')
-        assert_equal(lines[1], '1st March\t0\t123')
-        assert_equal(lines[2], '2nd March\t4452\t124')
-
-    def test_can_format_multiple_dirs_date_counts_as_tsv(self):
-        first_counts = gitlapse.ByDateLineCount('1st March', 'commit')
-        first_counts.add_record('src', 'Java', 123)
-
-        second_counts = gitlapse.ByDateLineCount('2nd March', 'commit')
-        second_counts.add_record('src', 'Java', 124)
-        second_counts.add_record('test', 'Java', 5)
-        second_counts.add_record('test', 'C', 4452)
-
-        csv_output = gitlapse.as_csv([first_counts, second_counts])
-        lines = csv_output.split('\n')
-        assert_equal(lines[0], 'Date\ttest-C\ttest-Java\tsrc-Java')
-        assert_equal(lines[1], '1st March\t0\t0\t123')
-        assert_equal(lines[2], '2nd March\t4452\t5\t124')
-
     def test_can_generate_gnuplot_for_table_data(self):
         table_data = "Date	test-Javascript	test-Java	src-Java	web-Javascript	web-PHP"
         gnuplot_data = gitlapse.to_gnuplot(table_data)

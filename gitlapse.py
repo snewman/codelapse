@@ -293,61 +293,6 @@ def create_record(src_dir, by_date_count, cloc_line):
     by_date_count.add_record(src_dir, language, lines_of_code)
     return by_date_count
 
-def parse_cloc_output(cloc_output, date, commit):
-    by_date_count = ByDateLineCount(date, commit)
-    
-    for src_dir in cloc_output.keys():
-        lines = cloc_output[src_dir].split('\n')
-    
-        print "Parsing " + cloc_output[src_dir]
-
-        for line in lines:
-            if 'files' in line:
-                continue
-
-            if line.isspace() or len(line) == 0:
-                continue
-
-            create_record(src_dir, by_date_count, line)
-
-    return by_date_count
-
-def as_csv(by_date_records):
-    languages_to_report = {}
-
-    for record in by_date_records:
-        for src_dir in record.src_dir.keys():
-            languages_for_dir = languages_to_report.get(src_dir, set())
-            
-            for language in record.src_dir[src_dir].keys():
-                languages_for_dir.add(language)
-
-            languages_to_report[src_dir] = languages_for_dir
-
-    row_header = 'Date'
-    for src_dir in languages_to_report.keys():
-        for language in languages_to_report[src_dir]:
-            row_header = row_header + '\t' + src_dir + '-' + language
-
-    row_header = row_header + '\n'
-
-    for record in by_date_records:
-        row_header = row_header + record.date
-        for src_dir in languages_to_report.keys():
-            for language in languages_to_report[src_dir]:
-                row_header = row_header + '\t' + str(record.src_dir.get(src_dir, {}).get(language, 0))
-
-        row_header = row_header + '\n'
-        
-    return row_header
-
-def linecount_for_date(date, commit, src_dirs, datafile, working_dir):
-    cloc_for_dirs = {}
-    for src_dir in src_dirs:
-        cloc_for_dirs[src_dir] = Executor().execute('perl ' + RUNNING_FROM + '/tools/cloc-1.08.pl ' + working_dir + '/' + src_dir + ' --csv --exclude-lang=CSS,HTML,XML --quiet').read() 
-
-    return parse_cloc_output(cloc_for_dirs, date, commit)
-            
 def generate_commit_list(location_for_files, git_repo):
     file_with_all_commits = location_for_files + "/commits.out"
     return git_repo.commits(file_with_all_commits)
