@@ -317,6 +317,9 @@ def execution_path(filename):
 
 RUNNING_FROM =  execution_path('run.sh')
 
+def pwd():
+    return Executor().execute('pwd').read().strip()
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv
@@ -325,8 +328,8 @@ def main(argv=None):
     parser.add_option("-r", "--results_dir", action="store", dest="result_dir", type="string", default=".", help="Location where results will be stored")
     parser.add_option("-s", "--source_dir", action="store", dest="src_dirs", type="string", default="src", help="A comma seperated list of directories to parse")
     parser.add_option("-f", "--frequency_of_sample", action="store", dest="sample_rate", default=100, type="int", help="How often should a sample be made")
-    parser.add_option("-g", "--git_repo_dir", action="store", dest="git_repo_dir", default=".", type="string", help="The directory containing the .git file")
-    parser.add_option("-w", "--working_dir", action="store", dest="working_dir", default=".", type="string", help="Where will files be checked out to for line counts etc")
+    parser.add_option("-g", "--git_repo_dir", action="store", dest="git_repo_dir", default=pwd()+'/.git', type="string", help="The directory containing the .git file")
+    parser.add_option("-w", "--working_dir", action="store", dest="working_dir", default=pwd(), type="string", help="Where will files be checked out to for line counts etc")
 
     (options, args) = parser.parse_args(argv)
 
